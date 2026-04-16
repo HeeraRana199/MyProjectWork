@@ -28,10 +28,21 @@ public class CandidateController {
         return new ResponseEntity<>(candidateService.getCandidateById(id), HttpStatus.OK);
     }
 
-    // ✅ Excel Upload API
+    // ✅ Excel Upload API with comprehensive validation and processing
     @PostMapping(value = "/candidate/upload",consumes = "multipart/form-data")
     public ResponseEntity<?> uploadExcel(@RequestPart MultipartFile file) {
-        return ResponseEntity.ok(candidateService.saveCandidatesFromExcel(file));
+        try {
+            CandidateService.ExcelUploadResult result = candidateService.saveCandidatesFromExcel(file);
+
+            if (!result.getErrors().isEmpty()) {
+                return ResponseEntity.badRequest().body(result);
+            }
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("Error processing file: " + e.getMessage());
+        }
     }
 
 }
