@@ -2,10 +2,13 @@ package com.cts.mapper;
 
 import com.cts.dto.AchievementDto;
 import com.cts.dto.CandidateDto;
+import com.cts.dto.CandidateScoreDto;
+import com.cts.dto.CertificationDto;
 import com.cts.dto.ProjectDto;
 import com.cts.dto.SkillsDto;
 import com.cts.entity.Achievement;
 import com.cts.entity.Candidate;
+import com.cts.entity.Certification;
 import com.cts.entity.Project;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +21,13 @@ public class CandidateRowMapper {
     public CandidateDto convertToCandidateDto(Candidate candidate){
         CandidateDto candidateDto = new CandidateDto();
         candidateDto.setCognizantCandidateId(candidate.getCognizantCandidateId());
+        candidateDto.setAssociateId(candidate.getAssociateId());
         candidateDto.setCandidateName(candidate.getCandidateName());
+        candidateDto.setCognizantEmailID(candidate.getCognizantEmailID());
+        candidateDto.setGender(candidate.getGender());
+        candidateDto.setCohortCode(candidate.getCohortCode());
+        candidateDto.setDeploymentLocation(candidate.getDeploymentLocation());
+        candidateDto.setTrackName(candidate.getTrackName());
 
         if (candidate.getSkills() != null) {
             SkillsDto skillsDto = new SkillsDto();
@@ -35,8 +44,11 @@ public class CandidateRowMapper {
         if (candidate.getProjects() != null) {
             for(Project project: candidate.getProjects()){
                 ProjectDto projectDto = new ProjectDto();
+                projectDto.setProjectId(project.getProjectId());
+                projectDto.setProjectName(project.getProjectName());
+                projectDto.setTech(project.getTech());
+                projectDto.setOutcome(project.getOutcome());
                 projectDto.setRole(project.getRole());
-                projectDto.setName(project.getProjectName());
                 projectDtoList.add(projectDto);
             }
         }
@@ -53,8 +65,34 @@ public class CandidateRowMapper {
                 achievementDtoList.add(achievementDto);
             }
         }
-
         candidateDto.setAchievement(achievementDtoList);
+
+        List<CertificationDto> certificationDtoList = new ArrayList<>();
+        if (candidate.getCertificates() != null) {
+            for(Certification certification: candidate.getCertificates()){
+                CertificationDto certificationDto = new CertificationDto();
+                certificationDto.setCertificationId(certification.getCertificationId());
+                certificationDto.setCertificationName(certification.getCertificationName());
+                certificationDto.setCertificationProvider(certification.getCertificationProvider());
+                certificationDto.setStatus(certification.getStatus());
+                certificationDtoList.add(certificationDto);
+            }
+        }
+        candidateDto.setCertificates(certificationDtoList);
+
+        if (candidate.getCandidateScore() != null) {
+            CandidateScoreDto candidateScoreDto = new CandidateScoreDto();
+            candidateScoreDto.setCandidateScoreId(candidate.getCandidateScore().getCandidateScoreId());
+            candidateScoreDto.setPerformanceScore(candidate.getCandidateScore().getPerformanceScore());
+            candidateScoreDto.setAttendanceScore(candidate.getCandidateScore().getAttendanceScore());
+            candidateScoreDto.setLanguageScore(candidate.getCandidateScore().getLanguageScore());
+            candidateScoreDto.setInterimScore(candidate.getCandidateScore().getInterimScore());
+            candidateScoreDto.setFinalScore(candidate.getCandidateScore().getFinalScore());
+            candidateDto.setCandidateScore(candidateScoreDto);
+        } else {
+            candidateDto.setCandidateScore(null);
+        }
+
         return candidateDto;
     }
 }

@@ -58,11 +58,8 @@ public class CandidateExcelHelper {
                 candidate.setGender(getCellAsString(row.getCell(8)));
 
                 candidate.setDeploymentLocation(getCellAsString(row.getCell(26)));
-//                System.out.println("A  " + row.getCell(41));
-//                System.out.println("B   " + row.getCell(36));
                 candidate.setTrackName(getCellAsString(row.getCell(35)));
                 candidate.setCohortCode(getCellAsString(row.getCell(40)));
-
 
                 candidates.add(candidate);
             }

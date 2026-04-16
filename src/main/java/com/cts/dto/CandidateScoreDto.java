@@ -1,0 +1,19 @@
+package com.cts.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class CandidateScoreDto {
+    private Integer candidateScoreId;
+
+    private Integer performanceScore;
+    private Integer attendanceScore;
+    private Integer languageScore;
+    private String interimScore;
+    private String finalScore;
+}
+
