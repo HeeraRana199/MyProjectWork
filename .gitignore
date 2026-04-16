@@ -1,0 +1,124 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+.properties
+
+####################################
+# OS files
+####################################
+.DS_Store
+Thumbs.db
+
+####################################
+# Logs
+####################################
+*.log
+logs/
+log/
+
+####################################
+# Spring Boot
+####################################
+application-local.yml
+application-local.properties
+application-dev.yml
+application-dev.properties
+
+####################################
+# Build output
+####################################
+target/
+build/
+out/
+
+####################################
+# Maven
+####################################
+.mvn/wrapper/maven-wrapper.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+
+####################################
+# Gradle
+####################################
+.gradle/
+
+####################################
+# IntelliJ IDEA
+####################################
+.idea/
+*.iml
+
+####################################
+# Eclipse
+####################################
+.project
+.classpath
+.settings/
+
+####################################
+# VS Code
+####################################
+.vscode/
+
+####################################
+# Java
+####################################
+*.class
+
+####################################
+# Temporary files
+####################################
+*.tmp
+*.swp
+*.bak
+*~
+
+####################################
+# Environment & secrets
+####################################
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+####################################
+# Node (if frontend exists)
+####################################
+node_modules/
+
+####################################
+# Docker
+####################################
+docker-compose.override.yml

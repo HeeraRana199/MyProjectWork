@@ -1,0 +1,33 @@
+package com.cts.dto;
+
+
+import com.cts.entity.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class CandidateDto {
+
+    private Integer cognizantCandidateId; // ✅ Excel value
+
+    private Integer associateId;
+    private String candidateName;
+    private String cognizantEmailID;
+    private String gender;
+    private String cohortCode;
+    private String deploymentLocation;
+    private String trackName;
+
+    private List<CertificationDto> certificates;
+    private List<AchievementDto> achievement;
+    private SkillsDto skills;
+    private List<ProjectDto> projects;
+    private CandidateScore candidateScore;
+}
+
+
