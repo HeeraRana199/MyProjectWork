@@ -35,8 +35,11 @@ public class CandidateRowMapper {
         if (candidate.getProjects() != null) {
             for(Project project: candidate.getProjects()){
                 ProjectDto projectDto = new ProjectDto();
+                projectDto.setProjectId(project.getProjectId());
                 projectDto.setRole(project.getRole());
-                projectDto.setName(project.getProjectName());
+                projectDto.setProjectName(project.getProjectName());
+                projectDto.setTech(project.getTech());
+                projectDto.setOutcome(project.getOutcome());
                 projectDtoList.add(projectDto);
             }
         }
