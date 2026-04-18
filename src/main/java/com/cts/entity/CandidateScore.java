@@ -16,7 +16,7 @@ public class CandidateScore {
 
     private Integer performanceScore;
     private Integer attendanceScore;
-    private Integer languageScore;
+    private String languageScore;
     private String interimScore;
     private String finalScore;
 
