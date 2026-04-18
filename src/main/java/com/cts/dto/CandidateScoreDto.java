@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
 public class CandidateScoreDto {
     private Integer candidateScoreId;
 
-    private Integer performanceScore;
-    private Integer attendanceScore;
-    private Integer languageScore;
+    private Double performanceScore;
+    private Double attendanceScore;
+    private String languageScore;
     private String interimScore;
     private String finalScore;
 }
-

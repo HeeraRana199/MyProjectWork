@@ -7,7 +7,8 @@ import com.cts.repository.CandidateRepository;
 import com.cts.repository.CertificationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -15,59 +16,91 @@ import java.util.List;
 @AllArgsConstructor
 public class CertificationService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CertificationService.class);
     private CertificationRepository certificationRepository;
     private CandidateRepository candidateRepository;
 
     //Create certification logic
     public Certification registerCertification(Certification certification, Integer candidateId) {
-        Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new CandidateNotFoundException("Candidate not found - to register Certification"));
-        certification.setCandidate(candidate);//setting the value of Candidate in the Certification entity
-        certification.setStatus(false);//setting the value of Status in the Certificate entity
-//        certification = certificationRepository.save(certification);// saving the certificate entity in the database
-        List<Certification> certificates = candidate.getCertificates();
-        certificates.add(certification);
-        candidate.setCertificates(certificates);
-        candidate = candidateRepository.save(candidate);
-        return certification;//It will return the entire JSON body with the all fields of certification entity
+        logger.info("Registering certification for candidateId: {}, Certification: {}", candidateId, certification.getCertificationName());
+        try {
+            Candidate candidate = candidateRepository.findById(candidateId)
+                    .orElseThrow(() -> new CandidateNotFoundException("Candidate not found - to register Certification"));
+            certification.setCandidate(candidate);//setting the value of Candidate in the Certification entity
+            certification.setStatus(false);//setting the value of Status in the Certificate entity
+            List<Certification> certificates = candidate.getCertificates();
+            certificates.add(certification);
+            candidate.setCertificates(certificates);
+            candidate = candidateRepository.save(candidate);
+            logger.info("Certification registered successfully for candidateId: {}", candidateId);
+            return certification;//It will return the entire JSON body with the all fields of certification entity
+        } catch (Exception e) {
+            logger.error("Error while registering certification for candidateId: {}", candidateId, e);
+            throw e;
+        }
     }
 
     //Get certification logic
     public Certification getCertification(String certificationId){
-        Certification certificate = certificationRepository.findById(certificationId)
-                .orElseThrow(()-> new RuntimeException("Certificate not found with this candidate ID"));
+        logger.debug("Fetching certification with ID: {}", certificationId);
+        try {
+            Certification certificate = certificationRepository.findById(certificationId)
+                    .orElseThrow(()-> new RuntimeException("Certificate not found with this candidate ID"));
 
-        return certificate;
+            logger.debug("Successfully retrieved certification with ID: {}", certificationId);
+            return certificate;
+        } catch (Exception e) {
+            logger.error("Error while fetching certification with ID: {}", certificationId, e);
+            throw e;
+        }
     }
 
     //Update certification logic
     public Certification updateCertification(Certification certification, String certificationId){
-        //first check inside the DB whether the candidate exit or not inside the candidate repository for which we are adding the certification
-        Certification certificate = certificationRepository.findById(certificationId)
-                .orElseThrow(() -> new RuntimeException("Certificate not found - to update Certification"));
+        logger.info("Updating certification with ID: {}", certificationId);
+        try {
+            //first check inside the DB whether the candidate exit or not inside the candidate repository for which we are adding the certification
+            Certification certificate = certificationRepository.findById(certificationId)
+                    .orElseThrow(() -> new RuntimeException("Certificate not found - to update Certification"));
 
-        //update only the fields which already exists
-        if(certificate.getCertificationName() != null){
-            certificate.setCertificationName(certification.getCertificationName());
+            //update only the fields which already exists
+            if(certificate.getCertificationName() != null){
+                logger.debug("Updating certification name for ID: {} to: {}", certificationId, certification.getCertificationName());
+                certificate.setCertificationName(certification.getCertificationName());
+            }
+
+            if(certificate.getCertificationProvider() != null){
+                logger.debug("Updating certification provider for ID: {} to: {}", certificationId, certification.getCertificationProvider());
+                certificate.setCertificationProvider(certification.getCertificationProvider());
+            }
+
+            if(certificate.getStatus() != null){
+                logger.debug("Updating certification status for ID: {} to: {}", certificationId, certification.getStatus());
+                certificate.setStatus(certification.getStatus());
+            }
+
+            //now save and return the updated certificate
+            Certification updatedCertification = certificationRepository.save(certificate);
+            logger.info("Certification updated successfully with ID: {}", certificationId);
+            return updatedCertification;
+        } catch (Exception e) {
+            logger.error("Error while updating certification with ID: {}", certificationId, e);
+            throw e;
         }
-
-        if(certificate.getCertificationProvider() != null){
-            certificate.setCertificationProvider(certification.getCertificationProvider());
-        }
-
-        if(certificate.getStatus() != null){
-            certificate.setStatus(certification.getStatus());
-        }
-
-        //now save and return the updated certificate
-        return certificationRepository.save(certificate);
     }
 
     //Delete certification logic
     public void deleteCertification(String certificationId){
-        Certification certificate = certificationRepository.findById(certificationId)
-                .orElseThrow(()-> new RuntimeException("Certificate not found!"));
+        logger.info("Deleting certification with ID: {}", certificationId);
+        try {
+            Certification certificate = certificationRepository.findById(certificationId)
+                    .orElseThrow(()-> new RuntimeException("Certificate not found!"));
 
-        certificationRepository.delete(certificate);//it will return nothing
+            certificationRepository.delete(certificate);//it will return nothing
+            logger.info("Certification deleted successfully with ID: {}", certificationId);
+        } catch (Exception e) {
+            logger.error("Error while deleting certification with ID: {}", certificationId, e);
+            throw e;
+        }
     }
 }
