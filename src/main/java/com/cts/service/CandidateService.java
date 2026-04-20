@@ -9,8 +9,6 @@ import com.cts.dto.CandidateDto;
 import com.cts.exceptions.CandidateNotFoundException;
 import com.cts.mapper.CandidateRowMapper;
 import com.cts.util.CandidateExcelHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,8 +21,6 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class CandidateService {
-
-    private static final Logger logger = LoggerFactory.getLogger(CandidateService.class);
 
     private CandidateRepository candidateRepository;
     private CandidateRowMapper candidateRowMapper;
@@ -76,17 +72,13 @@ public class CandidateService {
         ExcelUploadResult result = new ExcelUploadResult();
 
         try {
-            logger.info("Starting Excel upload process for file: {}", file.getOriginalFilename());
             InputStream is = file.getInputStream();
 
             // Step 1: Validate schema
-            logger.info("Validating Excel schema...");
             CandidateExcelHelper.ValidationResult validation = CandidateExcelHelper.validateExcelSchema(is);
             result.setSchemaValidationMessage(validation.getMessage());
-            logger.info("Schema validation result: {}", validation.getMessage());
 
             if (!validation.isValid()) {
-                logger.warn("Schema validation failed. Aborting upload.");
                 result.getErrors().add(validation.getMessage());
                 return result;
             }
@@ -95,17 +87,13 @@ public class CandidateService {
             is = file.getInputStream();
 
             // Step 2: Parse candidates
-            logger.info("Parsing candidates from Excel file...");
             List<Candidate> candidates = CandidateExcelHelper.excelToCandidates(is);
             result.setTotalRecords(candidates.size());
-            logger.info("Successfully parsed {} total records from Excel", candidates.size());
 
             // Step 3: Process in batches of 50
             final int BATCH_SIZE = 50;
             List<Candidate> toSave = new ArrayList<>();
             List<Candidate> toUpdate = new ArrayList<>();
-
-            logger.info("Starting batch processing with batch size: {}", BATCH_SIZE);
 
             for (int i = 0; i < candidates.size(); i++) {
                 Candidate candidate = candidates.get(i);
@@ -120,25 +108,20 @@ public class CandidateService {
                         Candidate merged = mergeCandidates(existing.get(), candidate);
                         toUpdate.add(merged);
                         result.setMergedRecords(result.getMergedRecords() + 1);
-                        logger.debug("Candidate {} marked for update (merge)", candidate.getCognizantCandidateId());
                     } else {
                         // Exact duplicate, reject
                         result.setRejectedRecords(result.getRejectedRecords() + 1);
-                        logger.debug("Candidate {} rejected as exact duplicate", candidate.getCognizantCandidateId());
                     }
                 } else {
                     // New candidate
                     toSave.add(candidate);
-                    logger.debug("Candidate {} marked as new", candidate.getCognizantCandidateId());
                 }
 
                 // Process batch when it reaches BATCH_SIZE or at the end
                 if (toSave.size() >= BATCH_SIZE || i == candidates.size() - 1) {
                     if (!toSave.isEmpty()) {
-                        logger.info("Saving batch of {} new candidates (record {} of {})", toSave.size(), i + 1, candidates.size());
                         candidateRepository.saveAll(toSave);
                         result.setSavedRecords(result.getSavedRecords() + toSave.size());
-                        logger.info("Batch saved successfully. Total saved records so far: {}", result.getSavedRecords());
                         toSave.clear();
                     }
                 }
@@ -146,20 +129,13 @@ public class CandidateService {
                 // Process updates in batches too
                 if (toUpdate.size() >= BATCH_SIZE || i == candidates.size() - 1) {
                     if (!toUpdate.isEmpty()) {
-                        logger.info("Updating batch of {} merged candidates (record {} of {})", toUpdate.size(), i + 1, candidates.size());
                         candidateRepository.saveAll(toUpdate);
-                        logger.info("Batch updated successfully. Total merged records so far: {}", result.getMergedRecords());
                         toUpdate.clear();
                     }
                 }
             }
 
-            logger.info("Excel upload process completed successfully");
-            logger.info("Upload Summary - Total: {}, Saved: {}, Merged: {}, Rejected: {}",
-                result.getTotalRecords(), result.getSavedRecords(), result.getMergedRecords(), result.getRejectedRecords());
-
         } catch (Exception e) {
-            logger.error("Error processing Excel file: {}", e.getMessage(), e);
             result.getErrors().add("Failed to process Excel file: " + e.getMessage());
         }
 
