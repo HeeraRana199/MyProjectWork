@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.Optional;
 
 import com.cts.dto.CandidateDto;
+import com.cts.entity.User;
 import com.cts.exceptions.CandidateNotFoundException;
 import com.cts.mapper.CandidateRowMapper;
+import com.cts.repository.UserRepository;
 import com.cts.util.CandidateExcelHelper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +26,9 @@ import lombok.AllArgsConstructor;
 public class CandidateService {
 
     private CandidateRepository candidateRepository;
+    private UserRepository userRepository;
     private CandidateRowMapper candidateRowMapper;
+    private PasswordEncoder passwordEncoder;
 
     public static class ExcelUploadResult {
         private int totalRecords;
@@ -93,6 +98,7 @@ public class CandidateService {
             // Step 3: Process in batches of 50
             final int BATCH_SIZE = 50;
             List<Candidate> toSave = new ArrayList<>();
+            List<User> users = new ArrayList<>();
             List<Candidate> toUpdate = new ArrayList<>();
 
             for (int i = 0; i < candidates.size(); i++) {
@@ -114,6 +120,11 @@ public class CandidateService {
                     }
                 } else {
                     // New candidate
+                    User user = new User();
+                    user.setPassword(passwordEncoder.encode(("welcome")));
+                    user.setEmail(candidate.getCognizantEmailID());
+                    user.setRole(User.Role.ROLE_TRAINEE);
+                    users.add(user);
                     toSave.add(candidate);
                 }
 
@@ -121,6 +132,7 @@ public class CandidateService {
                 if (toSave.size() >= BATCH_SIZE || i == candidates.size() - 1) {
                     if (!toSave.isEmpty()) {
                         candidateRepository.saveAll(toSave);
+                        userRepository.saveAll(users);
                         result.setSavedRecords(result.getSavedRecords() + toSave.size());
                         toSave.clear();
                     }
@@ -130,6 +142,7 @@ public class CandidateService {
                 if (toUpdate.size() >= BATCH_SIZE || i == candidates.size() - 1) {
                     if (!toUpdate.isEmpty()) {
                         candidateRepository.saveAll(toUpdate);
+                        userRepository.saveAll(users);
                         toUpdate.clear();
                     }
                 }

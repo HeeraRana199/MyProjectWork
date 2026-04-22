@@ -4,6 +4,7 @@ import com.cts.entity.Achievement;
 import com.cts.entity.Certification;
 import com.cts.entity.Project;
 import com.cts.entity.Skills;
+import com.cts.model.ApiResponse;
 import com.cts.service.*;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -41,8 +42,11 @@ public class TraineeController {
         logger.info("Received request to register certification for candidateId: {}", candidateId);
         try {
             certification = certificationService.registerCertification(certification, candidateId);
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(201);
+            apiResponse.setMessage("Certificate is added");
             logger.info("Successfully registered certification for candidateId: {}", candidateId);
-            return new ResponseEntity<>(certification, HttpStatus.CREATED);
+            return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error occurred while registering certification for candidateId: {}", candidateId, e);
             return ResponseEntity.internalServerError().body("Error registering certification: " + e.getMessage());
@@ -96,8 +100,11 @@ public class TraineeController {
         logger.info("Received request to add project for candidateId: {}, Project: {}", candidateId, candidateProject.getProjectName());
         try {
             Project project = projectService.addProject(candidateProject, candidateId);
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(201);
+            apiResponse.setMessage("Project is added");
             logger.info("Successfully added project with ID: {} for candidateId: {}", project.getProjectId(), candidateId);
-            return new ResponseEntity<>(project, HttpStatus.CREATED);
+            return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error occurred while adding project for candidateId: {}", candidateId, e);
             return ResponseEntity.internalServerError().body("Error adding project: " + e.getMessage());
@@ -122,8 +129,11 @@ public class TraineeController {
         logger.info("Received request to update project with ID: {}", projectId);
         try {
             Project project = projectService.updateProject(candidateProject, projectId);
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(200);
+            apiResponse.setMessage("Project is updated");
             logger.info("Successfully updated project with ID: {}", projectId);
-            return new ResponseEntity<>(project, HttpStatus.OK);
+            return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error occurred while updating project with ID: {}", projectId, e);
             return ResponseEntity.internalServerError().body("Error updating project: " + e.getMessage());
@@ -146,13 +156,16 @@ public class TraineeController {
 
 
 
-    @PutMapping("/skill/update/{candidateId}")
+    @PutMapping("/skill/{candidateId}")
     public ResponseEntity<?> updateSkills(@PathVariable Integer candidateId, @RequestBody Skills skills){
         logger.info("Received request to update skills for candidateId: {}", candidateId);
         try {
             skills = skillsService.updateSkills(skills, candidateId);
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(200);
+            apiResponse.setMessage("Skills are updated");
             logger.info("Successfully updated skills for candidateId: {}", candidateId);
-            return new ResponseEntity<>(skills, HttpStatus.OK);
+            return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error occurred while updating skills for candidateId: {}", candidateId, e);
             return ResponseEntity.internalServerError().body("Error updating skills: " + e.getMessage());
@@ -167,8 +180,11 @@ public class TraineeController {
         logger.info("Received request to add achievement for candidateId: {}", candidateId);
         try {
             Achievement achievement = achievementService.addAchievement(candidateAchievement, candidateId);
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(201);
+            apiResponse.setMessage("Achievement is added");
             logger.info("Successfully added achievement with ID: {} for candidateId: {}", achievement.getAId(), candidateId);
-            return new ResponseEntity<>(achievement, HttpStatus.CREATED);
+            return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error occurred while adding achievement for candidateId: {}", candidateId, e);
             return ResponseEntity.internalServerError().body("Error adding achievement: " + e.getMessage());
@@ -193,8 +209,11 @@ public class TraineeController {
         logger.info("Received request to update achievement with ID: {}", achievementId);
         try {
             Achievement achievement = achievementService.updateAchievement(candidateAchievement, achievementId);
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(200);
+            apiResponse.setMessage("Achievement is updated");
             logger.info("Successfully updated achievement with ID: {}", achievementId);
-            return new ResponseEntity<>(achievement, HttpStatus.OK);
+            return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error occurred while updating achievement with ID: {}", achievementId, e);
             return ResponseEntity.internalServerError().body("Error updating achievement: " + e.getMessage());
