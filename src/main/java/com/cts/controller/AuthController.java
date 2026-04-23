@@ -38,14 +38,12 @@ public class AuthController {
     private AuthService authService;
     private CandidateRepository candidateRepository;
 
-    /**
-     * Login endpoint - public, no authentication required.
-     *
-     * Request body: { "username": "admin@cognizant.com", "password": "Admin@1234" }
-     * Response:     { "token": "eyJ...", "role": "ROLE_ADMIN", "name": "Admin" }
-     */
-
-
+    @PostMapping("/registration")
+    public ResponseEntity<User> register(@RequestBody User user) {
+        // Authenticate using Spring Security (validates username + password via BCrypt)
+        User savedUser = authService.registration(user);
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -80,13 +78,5 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-
-    @PostMapping("/registration")
-    public ResponseEntity<User> register(@RequestBody User user) {
-        // Authenticate using Spring Security (validates username + password via BCrypt)
-        User savedUser = authService.registration(user);
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
-    }
-
 
 }

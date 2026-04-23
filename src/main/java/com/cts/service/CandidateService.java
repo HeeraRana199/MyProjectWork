@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.cts.dto.CandidateDto;
 import com.cts.entity.User;
@@ -69,6 +70,15 @@ public class CandidateService {
                 .orElseThrow(() -> new CandidateNotFoundException("Candidate not found"));
 
         return candidateRowMapper.convertToCandidateDto(candidate);
+    }
+
+    //Get all candidates logic
+    @Transactional
+    public List<CandidateDto> getAllCandidates() {
+        List<Candidate> candidates = candidateRepository.findAll();
+        return candidates.stream()
+                .map(candidateRowMapper::convertToCandidateDto)
+                .collect(Collectors.toList());
     }
 
     //Excel Upload Logic with validation, batch processing, and duplicate handling

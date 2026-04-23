@@ -51,4 +51,17 @@ public class AdminController {
             return ResponseEntity.internalServerError().body("Error fetching candidate: " + e.getMessage());
         }
     }
+
+    @GetMapping("/allcandidates")
+    public ResponseEntity<?> getAllCandidates() {
+        logger.info("Received request to fetch all candidates");
+        try {
+            var candidates = candidateService.getAllCandidates();
+            logger.debug("Successfully fetched {} candidates", candidates.size());
+            return new ResponseEntity<>(candidates, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching all candidates", e);
+            return ResponseEntity.internalServerError().body("Error fetching candidates: " + e.getMessage());
+        }
+    }
 }
