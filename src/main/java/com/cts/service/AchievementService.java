@@ -6,52 +6,87 @@ import com.cts.repository.AchievementRepository;
 import com.cts.repository.CandidateRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Service
 @AllArgsConstructor
 public class AchievementService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AchievementService.class);
     private CandidateRepository candidateRepository;
     private AchievementRepository achievementRepository;
 
     //Create achievement
     public Achievement addAchievement(Achievement achievement, Integer candidateId){
-        Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(()-> new RuntimeException("Candidate not found for Add Achievement!!"));
+        logger.info("Adding achievement for candidateId: {}, Title: {}", candidateId, achievement.getTitle());
+        try {
+            Candidate candidate = candidateRepository.findById(candidateId)
+                    .orElseThrow(()-> new RuntimeException("Candidate not found for Add Achievement!!"));
 
-        achievement.setCandidate(candidate);
-        return achievementRepository.save(achievement);
+            achievement.setCandidate(candidate);
+            Achievement savedAchievement = achievementRepository.save(achievement);
+            logger.debug("Achievement saved successfully with ID: {} for candidateId: {}", savedAchievement.getAId(), candidateId);
+            return savedAchievement;
+        } catch (Exception e) {
+            logger.error("Error while adding achievement for candidateId: {}", candidateId, e);
+            throw e;
+        }
     }
 
     //Fetch achievement using achievementId
     public Achievement getAchievement(Integer achievementId){
-        Achievement achievement = achievementRepository.findById(achievementId)
-                .orElseThrow(()-> new RuntimeException("Achievement not exist for this achievementID"));
+        logger.debug("Fetching achievement with ID: {}", achievementId);
+        try {
+            Achievement achievement = achievementRepository.findById(achievementId)
+                    .orElseThrow(()-> new RuntimeException("Achievement not exist for this achievementID"));
 
-        return achievement;
+            logger.debug("Successfully retrieved achievement with ID: {}", achievementId);
+            return achievement;
+        } catch (Exception e) {
+            logger.error("Error while fetching achievement with ID: {}", achievementId, e);
+            throw e;
+        }
     }
 
     //Update achievement using achievementId
     public Achievement updateAchievement(Achievement achievement, Integer achievementId){
-        Achievement existingAchievement = achievementRepository.findById(achievementId)
-                .orElseThrow(()-> new RuntimeException("This achievement not found for update"));
+        logger.info("Updating achievement with ID: {}", achievementId);
+        try {
+            Achievement existingAchievement = achievementRepository.findById(achievementId)
+                    .orElseThrow(()-> new RuntimeException("This achievement not found for update"));
 
-        if(achievement.getTitle() != null){
-            existingAchievement.setTitle(achievement.getTitle());
-        }
-        if(achievement.getDescription() != null){
-            existingAchievement.setDescription(achievement.getDescription());
-        }
+            if(achievement.getTitle() != null){
+                logger.debug("Updating achievement title for ID: {} to: {}", achievementId, achievement.getTitle());
+                existingAchievement.setTitle(achievement.getTitle());
+            }
+            if(achievement.getDescription() != null){
+                logger.debug("Updating achievement description for ID: {}", achievementId);
+                existingAchievement.setDescription(achievement.getDescription());
+            }
 
-        return achievementRepository.save(existingAchievement);
+            Achievement updatedAchievement = achievementRepository.save(existingAchievement);
+            logger.info("Achievement updated successfully with ID: {}", achievementId);
+            return updatedAchievement;
+        } catch (Exception e) {
+            logger.error("Error while updating achievement with ID: {}", achievementId, e);
+            throw e;
+        }
     }
 
     //Delete achievement using the achievementId
     public void deleteAchievement(Integer achievementId){
-        Achievement achievement = achievementRepository.findById(achievementId)
-                .orElseThrow(()-> new RuntimeException("Achievement not found to delete!!"));
+        logger.info("Deleting achievement with ID: {}", achievementId);
+        try {
+            Achievement achievement = achievementRepository.findById(achievementId)
+                    .orElseThrow(()-> new RuntimeException("Achievement not found to delete!!"));
 
-        achievementRepository.delete(achievement);
+            achievementRepository.delete(achievement);
+            logger.info("Achievement deleted successfully with ID: {}", achievementId);
+        } catch (Exception e) {
+            logger.error("Error while deleting achievement with ID: {}", achievementId, e);
+            throw e;
+        }
     }
 }

@@ -1,7 +1,5 @@
 package com.cts.dto;
 
-
-import com.cts.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,7 +25,7 @@ public class CandidateDto {
     private List<AchievementDto> achievement;
     private SkillsDto skills;
     private List<ProjectDto> projects;
-    private CandidateScore candidateScore;
+    private CandidateScoreDto candidateScore;
 }
 
 
