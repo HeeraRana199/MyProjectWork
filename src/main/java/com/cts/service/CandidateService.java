@@ -165,6 +165,19 @@ public class CandidateService {
         return result;
     }
 
+
+    @Transactional
+    public void deleteCandidateById(Integer candidateId) {
+
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() ->
+                        new CandidateNotFoundException("Candidate not found with id: " + candidateId));
+
+        // This single line triggers cascading delete
+        candidateRepository.delete(candidate);
+    }
+
+
     private boolean hasChanges(Candidate existing, Candidate newCandidate) {
         return !equals(existing.getAssociateId(), newCandidate.getAssociateId()) ||
                !equals(existing.getCandidateName(), newCandidate.getCandidateName()) ||

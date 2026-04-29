@@ -18,6 +18,8 @@ public class Project {
     private String tech;
     private String outcome;
     private String role;
+    @Column(length = 2000)
+    private String description;
 
     @ManyToOne
     @JoinColumn(name = "candidate_id")
