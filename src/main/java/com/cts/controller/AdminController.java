@@ -52,6 +52,7 @@ public class AdminController {
         }
     }
 
+
     @GetMapping("/allcandidates")
     public ResponseEntity<?> getAllCandidates() {
         logger.info("Received request to fetch all candidates");
@@ -62,6 +63,23 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("Error occurred while fetching all candidates", e);
             return ResponseEntity.internalServerError().body("Error fetching candidates: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/candidate/{candidateId}")
+    public ResponseEntity<?> deleteCandidate(@PathVariable Integer candidateId) {
+        logger.info("Received request to delete candidate with ID: {}", candidateId);
+
+        try {
+            candidateService.deleteCandidateById(candidateId);
+            logger.info("Successfully deleted candidate with ID: {}", candidateId);
+
+            return ResponseEntity.ok("Candidate and all associated data deleted successfully");
+
+        } catch (Exception e) {
+            logger.error("Error occurred while deleting candidate with ID: {}", candidateId, e);
+            return ResponseEntity.internalServerError()
+                    .body("Error deleting candidate: " + e.getMessage());
         }
     }
 }
