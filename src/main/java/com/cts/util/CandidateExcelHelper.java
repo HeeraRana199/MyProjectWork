@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.time.LocalDate;
-import java.time.ZoneId;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -515,8 +513,6 @@ public class CandidateExcelHelper {
                     candidate.setDeploymentLocation(getCellAsStringByHeader(row, headerIndexMap, "deployment location"));
                     candidate.setTrackName(getCellAsStringByHeader(row, headerIndexMap, "track name (as curriculum)"));
                     candidate.setCohortCode(getCellAsStringByHeader(row, headerIndexMap, "cohort code"));
-                    candidate.setDoj(getCellAsLocalDateByHeader(row, headerIndexMap, "doj"));
-
 
                     // Create and set CandidateScore
                     CandidateScore candidateScore = new CandidateScore();
@@ -525,8 +521,6 @@ public class CandidateExcelHelper {
                     candidateScore.setLanguageScore(getCellAsStringByHeader(row, headerIndexMap, "language assessment score"));
                     candidateScore.setInterimScore(getCellAsStringByHeader(row, headerIndexMap, "interim score"));
                     candidateScore.setFinalScore(getCellAsStringByHeader(row, headerIndexMap, "final score"));
-                    candidateScore.setInterimEvaluationFeedback(getCellAsStringByHeader(row, headerIndexMap, "interim evaluation feedback"));
-                    candidateScore.setFinalEvaluationFeedback(getCellAsStringByHeader(row, headerIndexMap, "final attempt 1 evaluation feedback"));
 
                     // Set bidirectional relationship
                     candidateScore.setCandidate(candidate);
@@ -565,19 +559,6 @@ public class CandidateExcelHelper {
         Cell cell = row.getCell(colIndex);
         return getCellAsInteger(cell);
     }
-    private static LocalDate getCellAsLocalDateByHeader(
-            Row row,
-            Map<String, Integer> headerIndexMap,
-            String headerName) {
-
-        Integer colIndex = headerIndexMap.get(headerName);
-        if (colIndex == null) {
-            return null;
-        }
-
-        Cell cell = row.getCell(colIndex);
-        return getCellAsLocalDate(cell);
-    }
 
     // Helper method to get cell value as Double by header name
     private static Double getCellAsDoubleByHeader(Row row, Map<String, Integer> headerIndexMap, String headerName) {
@@ -588,29 +569,4 @@ public class CandidateExcelHelper {
         Cell cell = row.getCell(colIndex);
         return getCellAsDouble(cell);
     }
-
-
-
-    private static LocalDate getCellAsLocalDate(Cell cell) {
-        if (cell == null) return null;
-
-        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-            return cell.getDateCellValue()
-                    .toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
-        }
-
-        // Optional: handle string dates if Excel has text
-        if (cell.getCellType() == CellType.STRING && !cell.getStringCellValue().isBlank()) {
-            try {
-                return LocalDate.parse(cell.getStringCellValue().trim());
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Invalid DOJ date format: " + cell.getStringCellValue());
-            }
-        }
-
-        return null;
-    }
-
 }

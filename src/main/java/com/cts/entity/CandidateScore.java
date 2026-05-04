@@ -20,12 +20,6 @@ public class CandidateScore {
     private String interimScore;
     private String finalScore;
 
-    @Column(length = 2000)
-    private String interimEvaluationFeedback;
-
-    @Column(length = 2000)
-    private String finalEvaluationFeedback;
-
     @OneToOne
     @JoinColumn(name="candidate_id")
     private Candidate candidate;

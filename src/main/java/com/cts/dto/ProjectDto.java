@@ -14,6 +14,5 @@ public class ProjectDto {
     private String tech;
     private String outcome;
     private String role;
-    private String description;
 
 }

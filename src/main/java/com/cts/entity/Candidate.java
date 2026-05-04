@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -25,20 +24,19 @@ public class Candidate {
     private String cohortCode;
     private String deploymentLocation;
     private String trackName;
-    private LocalDate doj;
 
     @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL)
     private CandidateScore candidateScore;
 
-    @OneToMany(mappedBy = "candidate" , cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "candidate" , cascade = CascadeType.ALL)
     private List<Certification> certificates;
 
-    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL)
     private List<Achievement> achievement;
 
-    @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL)
     private Skills skills;
 
-    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL)
     private List<Project> projects;
 }

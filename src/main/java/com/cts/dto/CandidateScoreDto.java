@@ -15,6 +15,4 @@ public class CandidateScoreDto {
     private String languageScore;
     private String interimScore;
     private String finalScore;
-    private String interimEvaluationFeedback;
-    private String finalEvaluationFeedback;
 }
