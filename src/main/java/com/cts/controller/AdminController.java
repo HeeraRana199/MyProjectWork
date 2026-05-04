@@ -70,6 +70,7 @@ public class AdminController {
         }
     }
 
+
     @GetMapping("/allcandidates")
     public ResponseEntity<?> getAllCandidates(
             @RequestParam(defaultValue = "0") int page,
@@ -109,5 +110,22 @@ public class AdminController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(resource);
+    }
+
+    @DeleteMapping("/candidate/{candidateId}")
+    public ResponseEntity<?> deleteCandidate(@PathVariable Integer candidateId) {
+        logger.info("Received request to delete candidate with ID: {}", candidateId);
+
+        try {
+            candidateService.deleteCandidateById(candidateId);
+            logger.info("Successfully deleted candidate with ID: {}", candidateId);
+
+            return ResponseEntity.ok("Candidate and all associated data deleted successfully");
+
+        } catch (Exception e) {
+            logger.error("Error occurred while deleting candidate with ID: {}", candidateId, e);
+            return ResponseEntity.internalServerError()
+                    .body("Error deleting candidate: " + e.getMessage());
+        }
     }
 }

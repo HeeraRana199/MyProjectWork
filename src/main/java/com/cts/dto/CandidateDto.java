@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -20,6 +21,7 @@ public class CandidateDto {
     private String cohortCode;
     private String deploymentLocation;
     private String trackName;
+    private LocalDate doj;
 
     private List<CertificationDto> certificates;
     private List<AchievementDto> achievement;

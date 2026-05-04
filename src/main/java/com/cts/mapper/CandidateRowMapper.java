@@ -28,6 +28,8 @@ public class CandidateRowMapper {
         candidateDto.setCohortCode(candidate.getCohortCode());
         candidateDto.setDeploymentLocation(candidate.getDeploymentLocation());
         candidateDto.setTrackName(candidate.getTrackName());
+        candidateDto.setDoj(candidate.getDoj());
+
 
         if (candidate.getSkills() != null) {
             SkillsDto skillsDto = new SkillsDto();
@@ -49,6 +51,7 @@ public class CandidateRowMapper {
                 projectDto.setTech(project.getTech());
                 projectDto.setOutcome(project.getOutcome());
                 projectDto.setRole(project.getRole());
+                projectDto.setDescription(project.getDescription());
                 projectDtoList.add(projectDto);
             }
         }
@@ -88,6 +91,10 @@ public class CandidateRowMapper {
             candidateScoreDto.setLanguageScore(candidate.getCandidateScore().getLanguageScore());
             candidateScoreDto.setInterimScore(candidate.getCandidateScore().getInterimScore());
             candidateScoreDto.setFinalScore(candidate.getCandidateScore().getFinalScore());
+            candidateScoreDto.setInterimEvaluationFeedback(candidate.getCandidateScore().getInterimEvaluationFeedback());
+            candidateScoreDto.setFinalEvaluationFeedback(candidate.getCandidateScore().getFinalEvaluationFeedback());
+
+
             candidateDto.setCandidateScore(candidateScoreDto);
         } else {
             candidateDto.setCandidateScore(null);
