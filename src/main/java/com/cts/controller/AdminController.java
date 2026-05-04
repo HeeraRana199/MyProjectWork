@@ -3,19 +3,36 @@ package com.cts.controller;
 import com.cts.entity.Candidate;
 import com.cts.service.CandidateService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 @RestController
-@AllArgsConstructor
+//@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/admin")
+//@CrossOrigin(origins = "http://localhost:5173") // Vite frontend
 public class AdminController {
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
-    private CandidateService candidateService;
+    private final CandidateService candidateService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     // ✅ Excel Upload API with comprehensive validation and processing
     @PostMapping(value = "/candidate/upload",consumes = "multipart/form-data")
@@ -26,6 +43,7 @@ public class AdminController {
 
             if (!result.getErrors().isEmpty()) {
                 logger.warn("Excel validation failed for file: {}. Errors: {}", file.getOriginalFilename(), result.getErrors());
+                System.out.println(result);
                 return ResponseEntity.badRequest().body(result);
             }
 
@@ -53,15 +71,43 @@ public class AdminController {
     }
 
     @GetMapping("/allcandidates")
-    public ResponseEntity<?> getAllCandidates() {
-        logger.info("Received request to fetch all candidates");
+    public ResponseEntity<?> getAllCandidates(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Integer pageSize) {
+        logger.info("Received request to fetch candidates - page: {}, pageSize: {}", page, pageSize);
         try {
-            var candidates = candidateService.getAllCandidates();
-            logger.debug("Successfully fetched {} candidates", candidates.size());
-            return new ResponseEntity<>(candidates, HttpStatus.OK);
+            var paginatedCandidates = candidateService.getAllCandidatesPaginated(page, pageSize);
+            logger.debug("Successfully fetched page {} with candidates", page);
+            return new ResponseEntity<>(paginatedCandidates, HttpStatus.OK);
         } catch (Exception e) {
-            logger.error("Error occurred while fetching all candidates", e);
+            logger.error("Error occurred while fetching paginated candidates", e);
             return ResponseEntity.internalServerError().body("Error fetching candidates: " + e.getMessage());
         }
+    }
+
+    // ✅ Fetch image by candidateId
+    @GetMapping("/profile-photo/{candidateId}")
+    public ResponseEntity<Resource> getProfileImage(
+            @PathVariable Long candidateId
+    ) throws MalformedURLException {
+
+        Path imagePath = Paths.get(uploadDir).resolve(candidateId + ".jpg");
+
+        if (!Files.exists(imagePath)) {
+
+            //return ResponseEntity.notFound().build();
+            Path defaultPath = Paths.get(uploadDir).resolve("000000.jpg");
+            Resource resource = new UrlResource(defaultPath.toUri());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(resource);
+        }
+
+        Resource resource = new UrlResource(imagePath.toUri());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(resource);
     }
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.Data;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -344,7 +345,7 @@ public class CandidateExcelHelper {
         HEADER_KEYWORDS.put("average of assess type-1", new String[]{"average", "assess", "type", "1"});
         HEADER_KEYWORDS.put("average of assess type-2", new String[]{"average", "assess", "type", "2"});
     }
-
+    @Data
     public static class ValidationResult {
         private boolean valid;
         private String message;

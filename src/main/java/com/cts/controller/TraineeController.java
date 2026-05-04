@@ -7,22 +7,45 @@ import com.cts.entity.Skills;
 import com.cts.model.ApiResponse;
 import com.cts.service.*;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/trainee")
 public class TraineeController {
-    private static final Logger logger = LoggerFactory.getLogger(TraineeController.class);
-    private CandidateService candidateService;
-    private CertificationService certificationService;
-    private ProjectService projectService;
-    private SkillsService skillsService;
-    private AchievementService achievementService;
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(TraineeController.class);
+
+    //  Final → constructor injection works
+    private final CandidateService candidateService;
+    private final CertificationService certificationService;
+    private final ProjectService projectService;
+    private final SkillsService skillsService;
+    private final AchievementService achievementService;
+
+    // @Value must stay as FIELD injection
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
 
     @GetMapping("/candidate")
     public ResponseEntity<?> getCandidateById(@RequestParam int id) {
@@ -231,5 +254,57 @@ public class TraineeController {
             logger.error("Error occurred while deleting achievement with ID: {}", candidateId, e);
             return ResponseEntity.internalServerError().body("Error deleting achievement: " + e.getMessage());
         }
+    }
+
+    //Upload Trainee Profile Photo
+    // ✅ Upload / overwrite image
+    @PostMapping("/profile-photo/{candidateId}")
+    public ResponseEntity<String> uploadProfileImage(
+            @PathVariable Long candidateId,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Empty file");
+        }
+
+        Files.createDirectories(Paths.get(uploadDir));
+
+        String filename = candidateId + ".jpg";
+        Path filePath = Paths.get(uploadDir).resolve(filename);
+
+        Files.copy(
+                file.getInputStream(),
+                filePath,
+                StandardCopyOption.REPLACE_EXISTING
+        );
+
+        return ResponseEntity.ok("Uploaded successfully");
+    }
+
+    // ✅ Fetch image by candidateId
+    @GetMapping("/profile-photo/{candidateId}")
+    public ResponseEntity<Resource> getProfileImage(
+            @PathVariable Long candidateId
+    ) throws MalformedURLException {
+
+        Path imagePath = Paths.get(uploadDir).resolve(candidateId + ".jpg");
+
+        if (!Files.exists(imagePath)) {
+
+            //return ResponseEntity.notFound().build();
+            Path defaultPath = Paths.get(uploadDir).resolve("000000.jpg");
+            Resource resource = new UrlResource(defaultPath.toUri());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(resource);
+        }
+
+        Resource resource = new UrlResource(imagePath.toUri());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(resource);
     }
 }

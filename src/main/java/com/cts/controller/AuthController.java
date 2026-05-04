@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
  * The React frontend stores this JWT and sends it in every subsequent request
  * as: Authorization: Bearer <token>
  */
+
 @RestController
 @RequestMapping("/auth")
 @AllArgsConstructor
@@ -78,5 +79,4 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-
 }

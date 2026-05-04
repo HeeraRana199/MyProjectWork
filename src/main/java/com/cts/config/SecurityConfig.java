@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -104,7 +105,15 @@ public class SecurityConfig {
 
             // URL access rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
+
+                    // ✅ ALLOW profile image upload & fetch (NO ROLE check)
+                    // ✅ Allow image existence check + fetch + upload
+                            .requestMatchers(HttpMethod.GET, "/trainee/profile-photo/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/trainee/profile-photo/**").permitAll()
+//                            .requestMatchers(HttpMethod.HEAD, "/admin/profile-photo/**").permitAll()
+                            .requestMatchers(HttpMethod.GET,  "/admin/profile-photo/**").permitAll()
+
+                    .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/leader/**").hasAnyAuthority("ROLE_LEADER", "ROLE_ADMIN")
                 .requestMatchers("/trainee/**").hasAuthority("ROLE_TRAINEE")
@@ -128,14 +137,22 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow frontend origin
-        configuration.setAllowedOrigins(List.of(allowedOrigins));
+        // Allow frontend origin(s) from comma-separated config property
+        List<String> allowedOriginList = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+
+        configuration.setAllowedOrigins(allowedOriginList);
 
         // Allow all standard HTTP methods
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("HEAD","GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
-        // Allow all headers including Authorization (JWT token)
+        // Allow all request headers including Authorization (JWT token)
         configuration.setAllowedHeaders(List.of("*"));
+
+        // Expose headers for browser clients if needed
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
 
         // Allow credentials (cookies, auth headers)
         configuration.setAllowCredentials(true);

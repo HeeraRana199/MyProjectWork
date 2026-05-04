@@ -34,25 +34,25 @@ public class SkillsService {
 
             if(skills.getProgrammings()!=null){
                 logger.debug("Updating programming skills for candidateId: {}", candidateId);
-                if(existingSkills.getProgrammings()!=null)
-                    existingSkills.setProgrammings(existingSkills.getProgrammings()+","+skills.getProgrammings());
-                else
+//                if(existingSkills.getProgrammings()!=null)
+//                    existingSkills.setProgrammings(existingSkills.getProgrammings()+","+skills.getProgrammings());
+//                else
                     existingSkills.setProgrammings(skills.getProgrammings());
             }
 
             if(skills.getTools()!=null){
                 logger.debug("Updating tools skills for candidateId: {}", candidateId);
-                if(existingSkills.getTools()!=null)
-                    existingSkills.setTools(existingSkills.getTools()+","+skills.getTools());
-                else
+//                if(existingSkills.getTools()!=null)
+//                    existingSkills.setTools(existingSkills.getTools()+","+skills.getTools());
+//                else
                     existingSkills.setTools(skills.getTools());
             }
 
             if(skills.getFrameworks()!=null){
                 logger.debug("Updating frameworks skills for candidateId: {}", candidateId);
-                if(existingSkills.getFrameworks()!=null)
-                    existingSkills.setFrameworks(existingSkills.getFrameworks()+","+skills.getFrameworks());
-                else
+//                if(existingSkills.getFrameworks()!=null)
+//                    existingSkills.setFrameworks(existingSkills.getFrameworks()+","+skills.getFrameworks());
+//                else
                     existingSkills.setFrameworks(skills.getFrameworks());
             }
 

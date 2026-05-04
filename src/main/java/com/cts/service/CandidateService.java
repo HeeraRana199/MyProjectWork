@@ -12,6 +12,11 @@ import com.cts.exceptions.CandidateNotFoundException;
 import com.cts.mapper.CandidateRowMapper;
 import com.cts.repository.UserRepository;
 import com.cts.util.CandidateExcelHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,16 +25,27 @@ import org.springframework.web.multipart.MultipartFile;
 import com.cts.entity.Candidate;
 import com.cts.repository.CandidateRepository;
 
-import lombok.AllArgsConstructor;
-
 @Service
-@AllArgsConstructor
 public class CandidateService {
 
     private CandidateRepository candidateRepository;
     private UserRepository userRepository;
     private CandidateRowMapper candidateRowMapper;
     private PasswordEncoder passwordEncoder;
+    
+    @Value("${app.pagination.page-size:10}")
+    private int defaultPageSize;
+
+    @Autowired
+    public CandidateService(CandidateRepository candidateRepository,
+                            UserRepository userRepository,
+                            CandidateRowMapper candidateRowMapper,
+                            PasswordEncoder passwordEncoder) {
+        this.candidateRepository = candidateRepository;
+        this.userRepository = userRepository;
+        this.candidateRowMapper = candidateRowMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public static class ExcelUploadResult {
         private int totalRecords;
@@ -58,6 +74,33 @@ public class CandidateService {
         public void setSchemaValidationMessage(String schemaValidationMessage) { this.schemaValidationMessage = schemaValidationMessage; }
     }
 
+    public static class PaginatedCandidatesResponse {
+        private List<CandidateDto> content;
+        private int currentPage;
+        private int pageSize;
+        private long totalElements;
+        private int totalPages;
+        private boolean isLast;
+        
+        public PaginatedCandidatesResponse(List<CandidateDto> content, int currentPage, int pageSize,
+                                           long totalElements, int totalPages, boolean isLast) {
+            this.content = content;
+            this.currentPage = currentPage;
+            this.pageSize = pageSize;
+            this.totalElements = totalElements;
+            this.totalPages = totalPages;
+            this.isLast = isLast;
+        }
+        
+        // Getters
+        public List<CandidateDto> getContent() { return content; }
+        public int getCurrentPage() { return currentPage; }
+        public int getPageSize() { return pageSize; }
+        public long getTotalElements() { return totalElements; }
+        public int getTotalPages() { return totalPages; }
+        public boolean isLast() { return isLast; }
+    }
+
     //Create candidate logic
     public Candidate addCandidate(Candidate candidate) {
         return candidateRepository.save(candidate);
@@ -79,6 +122,27 @@ public class CandidateService {
         return candidates.stream()
                 .map(candidateRowMapper::convertToCandidateDto)
                 .collect(Collectors.toList());
+    }
+    
+    //Get paginated candidates logic
+    @Transactional
+    public PaginatedCandidatesResponse getAllCandidatesPaginated(int page, Integer pageSize) {
+        int size = (pageSize != null && pageSize > 0) ? pageSize : defaultPageSize;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Candidate> candidatePage = candidateRepository.findAll(pageable);
+        
+        List<CandidateDto> content = candidatePage.getContent().stream()
+                .map(candidateRowMapper::convertToCandidateDto)
+                .collect(Collectors.toList());
+        
+        return new PaginatedCandidatesResponse(
+                content,
+                page,
+                size,
+                candidatePage.getTotalElements(),
+                candidatePage.getTotalPages(),
+                candidatePage.isLast()
+        );
     }
 
     //Excel Upload Logic with validation, batch processing, and duplicate handling
