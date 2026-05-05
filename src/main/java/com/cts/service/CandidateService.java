@@ -32,7 +32,7 @@ public class CandidateService {
     private UserRepository userRepository;
     private CandidateRowMapper candidateRowMapper;
     private PasswordEncoder passwordEncoder;
-    
+
     @Value("${app.pagination.page-size:10}")
     private int defaultPageSize;
 
@@ -81,7 +81,7 @@ public class CandidateService {
         private long totalElements;
         private int totalPages;
         private boolean isLast;
-        
+
         public PaginatedCandidatesResponse(List<CandidateDto> content, int currentPage, int pageSize,
                                            long totalElements, int totalPages, boolean isLast) {
             this.content = content;
@@ -91,7 +91,7 @@ public class CandidateService {
             this.totalPages = totalPages;
             this.isLast = isLast;
         }
-        
+
         // Getters
         public List<CandidateDto> getContent() { return content; }
         public int getCurrentPage() { return currentPage; }
@@ -123,18 +123,18 @@ public class CandidateService {
                 .map(candidateRowMapper::convertToCandidateDto)
                 .collect(Collectors.toList());
     }
-    
+
     //Get paginated candidates logic
     @Transactional
     public PaginatedCandidatesResponse getAllCandidatesPaginated(int page, Integer pageSize) {
         int size = (pageSize != null && pageSize > 0) ? pageSize : defaultPageSize;
         Pageable pageable = PageRequest.of(page, size);
         Page<Candidate> candidatePage = candidateRepository.findAll(pageable);
-        
+
         List<CandidateDto> content = candidatePage.getContent().stream()
                 .map(candidateRowMapper::convertToCandidateDto)
                 .collect(Collectors.toList());
-        
+
         return new PaginatedCandidatesResponse(
                 content,
                 page,
@@ -198,7 +198,11 @@ public class CandidateService {
                     user.setPassword(passwordEncoder.encode(("welcome")));
                     user.setEmail(candidate.getCognizantEmailID());
                     user.setRole(User.Role.ROLE_TRAINEE);
-                    users.add(user);
+                    //users.add(user);
+
+                    user.setCandidate(candidate);
+                    candidate.setUser(user);
+
                     toSave.add(candidate);
                 }
 
@@ -206,7 +210,7 @@ public class CandidateService {
                 if (toSave.size() >= BATCH_SIZE || i == candidates.size() - 1) {
                     if (!toSave.isEmpty()) {
                         candidateRepository.saveAll(toSave);
-                        userRepository.saveAll(users);
+                        //userRepository.saveAll(users);
                         result.setSavedRecords(result.getSavedRecords() + toSave.size());
                         toSave.clear();
                     }
@@ -216,11 +220,12 @@ public class CandidateService {
                 if (toUpdate.size() >= BATCH_SIZE || i == candidates.size() - 1) {
                     if (!toUpdate.isEmpty()) {
                         candidateRepository.saveAll(toUpdate);
-                        userRepository.saveAll(users);
+                        //userRepository.saveAll(users);
                         toUpdate.clear();
                     }
                 }
             }
+
 
         } catch (Exception e) {
             result.getErrors().add("Failed to process Excel file: " + e.getMessage());

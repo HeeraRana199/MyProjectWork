@@ -46,6 +46,14 @@ public class User {
     @Builder.Default
     private boolean active = true;
 
+    @OneToOne
+    @JoinColumn(name = "candidate_id", referencedColumnName = "cognizant_candidate_id")
+    private Candidate candidate;
+
+
+
+
+
     /**
      * One-to-One: Trainees have a linked Candidate profile.
      * Admin and Leader may not have a Candidate linked.
