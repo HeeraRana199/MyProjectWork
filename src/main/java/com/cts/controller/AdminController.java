@@ -1,6 +1,8 @@
 package com.cts.controller;
 
 import com.cts.entity.Candidate;
+import com.cts.entity.User;
+import com.cts.service.AuthService;
 import com.cts.service.CandidateService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +32,19 @@ import java.nio.file.StandardCopyOption;
 public class AdminController {
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
     private final CandidateService candidateService;
+    private final AuthService authService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
+
+
+    @PostMapping("/leaderRegister")
+    public ResponseEntity<User> leaderRegister(@RequestBody User user) {
+        // Authenticate using Spring Security (validates username + password via BCrypt)
+        User savedUser = authService.leaderRegister(user);
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    }
+
 
     // ✅ Excel Upload API with comprehensive validation and processing
     @PostMapping(value = "/candidate/upload",consumes = "multipart/form-data")

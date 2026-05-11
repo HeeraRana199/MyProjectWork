@@ -19,4 +19,10 @@ public class AuthService {
 
         return userRepository.save(user);
     }
+
+    public User leaderRegister(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(User.Role.ROLE_LEADER);
+        return userRepository.save(user);
+    }
 }
