@@ -1,6 +1,7 @@
 package com.cts.controller;
 
 
+import com.cts.service.CandidateService;
 import com.cts.service.LeaderService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -21,6 +22,19 @@ import java.util.List;
 public class LeaderController {
     private static final Logger logger = LoggerFactory.getLogger(LeaderController.class);
     private final LeaderService leaderService;
+    private final CandidateService candidateService;
+
+    @GetMapping("/candidate")
+    public ResponseEntity<?> getCandidateById(@RequestParam int id) {
+        logger.info("Leader request to fetch candidate with ID: {}", id);
+        try {
+            var candidateDto = candidateService.getCandidateById(id);
+            return new ResponseEntity<>(candidateDto, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error fetching candidate {} for leader", id, e);
+            return ResponseEntity.internalServerError().body("Error fetching candidate: " + e.getMessage());
+        }
+    }
 
 
     /**
