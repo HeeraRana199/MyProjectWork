@@ -17,4 +17,5 @@ public class CandidateScoreDto {
     private String finalScore;
     private String interimEvaluationFeedback;
     private String finalEvaluationFeedback;
+    private String readiness;
 }

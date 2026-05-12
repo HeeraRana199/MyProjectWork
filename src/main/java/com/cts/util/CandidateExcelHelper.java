@@ -524,10 +524,18 @@ public class CandidateExcelHelper {
                     candidateScore.setPerformanceScore(getCellAsDoubleByHeader(row, headerIndexMap, "performance health score"));
                     candidateScore.setAttendanceScore(getCellAsDoubleByHeader(row, headerIndexMap, "attendance health score"));
                     candidateScore.setLanguageScore(getCellAsStringByHeader(row, headerIndexMap, "language assessment score"));
-                    candidateScore.setInterimScore(getCellAsStringByHeader(row, headerIndexMap, "interim score"));
-                    candidateScore.setFinalScore(getCellAsStringByHeader(row, headerIndexMap, "final score"));
+                    candidateScore.setInterimScore(getCellAsStringByHeader(row, headerIndexMap, "interim rag"));
+                    String finalRag1=getCellAsStringByHeader(row, headerIndexMap, "final attempt 1 rag");
+                    String finalRag2=getCellAsStringByHeader(row, headerIndexMap, "final attempt 2 rag");
+                    String finalRag= finalRag2.length()==0?finalRag1:finalRag2;
+                    System.out.println(finalRag+"  --- "+finalRag1+"  ---  "+ finalRag2);
+                    System.out.println(finalRag.length()+"  --- "+finalRag1.length()+"  ---  "+ finalRag2.length());
+                    candidateScore.setFinalScore(finalRag);
                     candidateScore.setInterimEvaluationFeedback(getCellAsStringByHeader(row, headerIndexMap, "interim evaluation feedback"));
                     candidateScore.setFinalEvaluationFeedback(getCellAsStringByHeader(row, headerIndexMap, "final attempt 1 evaluation feedback"));
+                    if(finalRag.equalsIgnoreCase("Green")){
+                        candidateScore.setReadiness("Ready");
+                    }
 
                     // Set bidirectional relationship
                     candidateScore.setCandidate(candidate);

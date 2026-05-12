@@ -1,6 +1,9 @@
 package com.cts.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 /**
@@ -25,10 +28,14 @@ public class User {
     private Long userId;
 
     /** Username = cognizantEmail for trainees */
+    @NotNull(message = "Email should not be empty")
+    @Email(message = "Email must be a valid email address")
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
     /** BCrypt-hashed password */
+    @NotNull(message = "Password should not be empty")
+    @Size(min = 6, message = "Password must be at least 6 characters long")
     @Column(nullable = false)
     private String password;
 
@@ -38,6 +45,7 @@ public class User {
      * ROLE_TRAINEE - Can view own profile and edit limited fields
      * ROLE_LEADER - Can view all trainees, filter/search
      */
+    @NotNull(message = "Role should not be empty")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;

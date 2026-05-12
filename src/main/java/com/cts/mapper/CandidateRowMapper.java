@@ -93,6 +93,7 @@ public class CandidateRowMapper {
             candidateScoreDto.setFinalScore(candidate.getCandidateScore().getFinalScore());
             candidateScoreDto.setInterimEvaluationFeedback(candidate.getCandidateScore().getInterimEvaluationFeedback());
             candidateScoreDto.setFinalEvaluationFeedback(candidate.getCandidateScore().getFinalEvaluationFeedback());
+            candidateScoreDto.setReadiness(candidate.getCandidateScore().getReadiness());
 
 
             candidateDto.setCandidateScore(candidateScoreDto);

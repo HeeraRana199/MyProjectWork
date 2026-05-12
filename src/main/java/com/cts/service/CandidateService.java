@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cts.entity.Candidate;
+import com.cts.entity.CandidateScore;
 import com.cts.repository.CandidateRepository;
 
 @Service
@@ -254,7 +255,8 @@ public class CandidateService {
                !equals(existing.getGender(), newCandidate.getGender()) ||
                !equals(existing.getCohortCode(), newCandidate.getCohortCode()) ||
                !equals(existing.getDeploymentLocation(), newCandidate.getDeploymentLocation()) ||
-               !equals(existing.getTrackName(), newCandidate.getTrackName());
+               !equals(existing.getTrackName(), newCandidate.getTrackName()) ||
+               !equals(existing.getCandidateScore().getFinalScore(), newCandidate.getCandidateScore().getFinalScore());
     }
 
     private Candidate mergeCandidates(Candidate existing, Candidate newCandidate) {
@@ -280,6 +282,19 @@ public class CandidateService {
         if (newCandidate.getTrackName() != null && !newCandidate.getTrackName().isEmpty()) {
             existing.setTrackName(newCandidate.getTrackName());
         }
+        if(newCandidate.getCandidateScore().getFinalScore() != null && !newCandidate.getCandidateScore().getFinalScore().isEmpty()){
+            existing.getCandidateScore().setFinalScore(newCandidate.getCandidateScore().getFinalScore());
+            if(newCandidate.getCandidateScore().getFinalScore().equalsIgnoreCase("Green")){
+                existing.getCandidateScore().setReadiness("Ready");
+            }
+            else if(newCandidate.getCandidateScore().getFinalScore().equalsIgnoreCase("Red")){
+                existing.getCandidateScore().setReadiness("Not Ready");
+            }
+            else if(newCandidate.getCandidateScore().getFinalScore().equalsIgnoreCase("Amber")){
+                existing.getCandidateScore().setReadiness("Not Ready");
+            }
+        }
+
         return existing;
     }
 

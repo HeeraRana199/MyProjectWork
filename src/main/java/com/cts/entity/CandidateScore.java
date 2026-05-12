@@ -19,6 +19,7 @@ public class CandidateScore {
     private String languageScore;//string
     private String interimScore;
     private String finalScore;
+    private String readiness="Not Ready";
 
     @Column(length = 2000)
     private String interimEvaluationFeedback;

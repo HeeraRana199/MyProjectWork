@@ -1,6 +1,8 @@
 package com.cts.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,12 +17,19 @@ import java.util.List;
 public class Candidate {
 
     @Id
+    @NotNull(message = "Cognizant Candidate ID should not be empty")
     @Column(name = "cognizant_candidate_id", unique = true)
     private Integer cognizantCandidateId; // ✅ Excel value
 
     private Integer associateId;
+
+    @NotNull(message = "Candidate name should not be empty")
     private String candidateName;
+
+    @NotNull(message = "Cognizant Email ID should not be empty")
+    @Email(message = "Cognizant Email ID must be a valid email address")
     private String cognizantEmailID;
+
     private String gender;
     private String cohortCode;
     private String deploymentLocation;

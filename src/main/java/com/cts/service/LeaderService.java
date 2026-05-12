@@ -42,17 +42,9 @@ public class LeaderService {
         int size = (pageSize != null && pageSize > 0) ? pageSize : defaultPageSize;
         Pageable pageable = PageRequest.of(page, size);
 
-        List<String> prog = programmingSkills == null ? Collections.emptyList() : programmingSkills;
-        List<String> tools = toolSkills == null ? Collections.emptyList() : toolSkills;
-        List<String> fw = frameworkSkills == null ? Collections.emptyList() : frameworkSkills;
-
-        Specification<Candidate> spec = Specification
-                .where(CandidateSpecifications.hasProgrammingSkills(prog))
-                .and(CandidateSpecifications.hasToolSkills(tools))
-                .and(CandidateSpecifications.hasFrameworkSkills(fw))
-                .and(CandidateSpecifications.hasCertificate(certificate))
-                .and(CandidateSpecifications.hasCohortCode(cohortCode))
-                .and(CandidateSpecifications.hasDeploymentLocation(deploymentLocation));
+        Specification<Candidate> spec = buildSpec(
+                programmingSkills, toolSkills, frameworkSkills,
+                certificate, cohortCode, deploymentLocation);
 
         Page<Candidate> candidatePage = candidateRepository.findAll(spec, pageable);
 
@@ -68,5 +60,45 @@ public class LeaderService {
                 candidatePage.getTotalPages(),
                 candidatePage.isLast()
         );
+    }
+
+    /** Returns every candidate that matches the filters — used for CSV export. */
+    @Transactional
+    public List<CandidateDto> getAllFilteredCandidates(
+            List<String> programmingSkills,
+            List<String> toolSkills,
+            List<String> frameworkSkills,
+            String certificate,
+            String cohortCode,
+            String deploymentLocation) {
+
+        Specification<Candidate> spec = buildSpec(
+                programmingSkills, toolSkills, frameworkSkills,
+                certificate, cohortCode, deploymentLocation);
+
+        return candidateRepository.findAll(spec).stream()
+                .map(candidateRowMapper::convertToCandidateDto)
+                .collect(Collectors.toList());
+    }
+
+    private Specification<Candidate> buildSpec(
+            List<String> programmingSkills,
+            List<String> toolSkills,
+            List<String> frameworkSkills,
+            String certificate,
+            String cohortCode,
+            String deploymentLocation) {
+
+        List<String> prog = programmingSkills == null ? Collections.emptyList() : programmingSkills;
+        List<String> tools = toolSkills == null ? Collections.emptyList() : toolSkills;
+        List<String> fw = frameworkSkills == null ? Collections.emptyList() : frameworkSkills;
+
+        return Specification
+                .where(CandidateSpecifications.hasProgrammingSkills(prog))
+                .and(CandidateSpecifications.hasToolSkills(tools))
+                .and(CandidateSpecifications.hasFrameworkSkills(fw))
+                .and(CandidateSpecifications.hasCertificate(certificate))
+                .and(CandidateSpecifications.hasCohortCode(cohortCode))
+                .and(CandidateSpecifications.hasDeploymentLocation(deploymentLocation));
     }
 }

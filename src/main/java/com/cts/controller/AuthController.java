@@ -8,6 +8,7 @@ import com.cts.repository.CandidateRepository;
 import com.cts.repository.UserRepository;
 import com.cts.security.JwtUtils;
 import com.cts.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,7 +41,7 @@ public class AuthController {
     private CandidateRepository candidateRepository;
 
     @PostMapping("/registration")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<User> register(@RequestBody @Valid User user) {
         // Authenticate using Spring Security (validates username + password via BCrypt)
         User savedUser = authService.registration(user);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);

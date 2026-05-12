@@ -6,6 +6,7 @@ import com.cts.entity.Project;
 import com.cts.entity.Skills;
 import com.cts.model.ApiResponse;
 import com.cts.service.*;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ public class TraineeController {
     }
 
     @PostMapping("/certificate/{candidateId}")
-    public ResponseEntity<?> registerCertification(@RequestBody Certification certification, @PathVariable Integer candidateId){
+    public ResponseEntity<?> registerCertification(@RequestBody @Valid Certification certification, @PathVariable Integer candidateId){
         logger.info("Received request to register certification for candidateId: {}", candidateId);
         try {
             certification = certificationService.registerCertification(certification, candidateId);
@@ -119,7 +120,7 @@ public class TraineeController {
 
 
     @PostMapping("/project/{candidateId}")
-    public ResponseEntity<?> addProject(@RequestBody Project candidateProject, @PathVariable Integer candidateId){
+    public ResponseEntity<?> addProject(@RequestBody @Valid Project candidateProject, @PathVariable Integer candidateId){
         logger.info("Received request to add project for candidateId: {}, Project: {}", candidateId, candidateProject.getProjectName());
         try {
             Project project = projectService.addProject(candidateProject, candidateId);
@@ -199,7 +200,7 @@ public class TraineeController {
 
 
     @PostMapping("/achievement/{candidateId}")
-    public ResponseEntity<?> addAchievement(@RequestBody Achievement candidateAchievement, @PathVariable Integer candidateId){
+    public ResponseEntity<?> addAchievement(@RequestBody @Valid Achievement candidateAchievement, @PathVariable Integer candidateId){
         logger.info("Received request to add achievement for candidateId: {}", candidateId);
         try {
             Achievement achievement = achievementService.addAchievement(candidateAchievement, candidateId);

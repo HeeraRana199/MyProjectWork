@@ -57,6 +57,10 @@ public class AchievementService {
             Achievement existingAchievement = achievementRepository.findById(achievementId)
                     .orElseThrow(()-> new RuntimeException("This achievement not found for update"));
 
+            if(achievement.getType() != null){
+                logger.debug("Updating achievement type for ID: {} to: {}", achievementId, achievement.getType());
+                existingAchievement.setType(achievement.getType());
+            }
             if(achievement.getTitle() != null){
                 logger.debug("Updating achievement title for ID: {} to: {}", achievementId, achievement.getTitle());
                 existingAchievement.setTitle(achievement.getTitle());

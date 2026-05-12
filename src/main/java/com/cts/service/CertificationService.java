@@ -63,18 +63,18 @@ public class CertificationService {
             Certification certificate = certificationRepository.findById(certificationId)
                     .orElseThrow(() -> new RuntimeException("Certificate not found - to update Certification"));
 
-            //update only the fields which already exists
-            if(certificate.getCertificationName() != null){
+            // Merge only the fields present in the incoming payload
+            if(certification.getCertificationName() != null){
                 logger.debug("Updating certification name for ID: {} to: {}", certificationId, certification.getCertificationName());
                 certificate.setCertificationName(certification.getCertificationName());
             }
 
-            if(certificate.getCertificationProvider() != null){
+            if(certification.getCertificationProvider() != null){
                 logger.debug("Updating certification provider for ID: {} to: {}", certificationId, certification.getCertificationProvider());
                 certificate.setCertificationProvider(certification.getCertificationProvider());
             }
 
-            if(certificate.getStatus() != null){
+            if(certification.getStatus() != null){
                 logger.debug("Updating certification status for ID: {} to: {}", certificationId, certification.getStatus());
                 certificate.setStatus(certification.getStatus());
             }
