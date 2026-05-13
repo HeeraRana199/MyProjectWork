@@ -74,4 +74,12 @@ public final class CandidateSpecifications {
             return cb.like(cb.lower(root.get("deploymentLocation")), pattern(location));
         };
     }
+
+    /** Exact match on the integer Candidate ID. */
+    public static Specification<Candidate> hasCandidateId(Integer candidateId) {
+        return (root, query, cb) -> {
+            if (candidateId == null) return cb.conjunction();
+            return cb.equal(root.get("cognizantCandidateId"), candidateId);
+        };
+    }
 }

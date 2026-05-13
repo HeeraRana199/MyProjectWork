@@ -36,6 +36,7 @@ public class LeaderService {
             String certificate,
             String cohortCode,
             String deploymentLocation,
+            Integer candidateId,
             int page,
             Integer pageSize) {
 
@@ -44,7 +45,7 @@ public class LeaderService {
 
         Specification<Candidate> spec = buildSpec(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation);
+                certificate, cohortCode, deploymentLocation, candidateId);
 
         Page<Candidate> candidatePage = candidateRepository.findAll(spec, pageable);
 
@@ -70,11 +71,12 @@ public class LeaderService {
             List<String> frameworkSkills,
             String certificate,
             String cohortCode,
-            String deploymentLocation) {
+            String deploymentLocation,
+            Integer candidateId) {
 
         Specification<Candidate> spec = buildSpec(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation);
+                certificate, cohortCode, deploymentLocation, candidateId);
 
         return candidateRepository.findAll(spec).stream()
                 .map(candidateRowMapper::convertToCandidateDto)
@@ -87,7 +89,8 @@ public class LeaderService {
             List<String> frameworkSkills,
             String certificate,
             String cohortCode,
-            String deploymentLocation) {
+            String deploymentLocation,
+            Integer candidateId) {
 
         List<String> prog = programmingSkills == null ? Collections.emptyList() : programmingSkills;
         List<String> tools = toolSkills == null ? Collections.emptyList() : toolSkills;
@@ -99,6 +102,7 @@ public class LeaderService {
                 .and(CandidateSpecifications.hasFrameworkSkills(fw))
                 .and(CandidateSpecifications.hasCertificate(certificate))
                 .and(CandidateSpecifications.hasCohortCode(cohortCode))
-                .and(CandidateSpecifications.hasDeploymentLocation(deploymentLocation));
+                .and(CandidateSpecifications.hasDeploymentLocation(deploymentLocation))
+                .and(CandidateSpecifications.hasCandidateId(candidateId));
     }
 }

@@ -58,11 +58,12 @@ public class LeaderController {
             @RequestParam(required = false) String certificate,
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
+            @RequestParam(required = false) Integer candidateId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer pageSize) {
 
-        logger.info("Filter candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, page: {}",
-                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, page);
+        logger.info("Filter candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, candidateId: {}, page: {}",
+                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, candidateId, page);
         try {
             var result = leaderService.getFilteredCandidates(
                     programmingSkills == null ? Collections.emptyList() : programmingSkills,
@@ -71,6 +72,7 @@ public class LeaderController {
                     certificate,
                     cohortCode,
                     deploymentLocation,
+                    candidateId,
                     page,
                     pageSize
             );
@@ -93,10 +95,11 @@ public class LeaderController {
             @RequestParam(required = false) String certificate,
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
+            @RequestParam(required = false) Integer candidateId,
             HttpServletResponse response) throws IOException {
 
-        logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}",
-                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation);
+        logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, candidateId: {}",
+                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, candidateId);
 
         String timestamp = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         String filename = "candidates-" + timestamp + ".csv";
@@ -107,7 +110,7 @@ public class LeaderController {
 
         List<CandidateDto> rows = leaderService.getAllFilteredCandidates(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation);
+                certificate, cohortCode, deploymentLocation, candidateId);
 
         try (PrintWriter writer = response.getWriter()) {
             // BOM so Excel detects UTF-8 correctly
