@@ -113,6 +113,10 @@ public class SecurityConfig {
 //                            .requestMatchers(HttpMethod.HEAD, "/admin/profile-photo/**").permitAll()
                             .requestMatchers(HttpMethod.GET,  "/admin/profile-photo/**").permitAll()
 
+                    // /auth/** is open at the Spring Security layer; the change-password
+                    // endpoint enforces authentication itself by inspecting the SecurityContext
+                    // (set by AuthTokenFilter), so it can return a proper JSON 401 instead of
+                    // Spring Security's default empty-body 403.
                     .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/leader/**").hasAnyAuthority("ROLE_LEADER", "ROLE_ADMIN")
