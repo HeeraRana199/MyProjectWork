@@ -154,12 +154,21 @@ public class CandidateService {
         try {
             InputStream is = file.getInputStream();
 
-            // Step 1: Validate schema
+            // Step 1: Validate schema (strict header match against REQUIRED_HEADERS)
             CandidateExcelHelper.ValidationResult validation = CandidateExcelHelper.validateExcelSchema(is);
             result.setSchemaValidationMessage(validation.getMessage());
 
             if (!validation.isValid()) {
-                result.getErrors().add(validation.getMessage());
+                // Surface each missing column as its own error entry so the
+                // frontend can render a tidy bullet list instead of a single
+                // long comma-separated line.
+                if (validation.getMissingHeaders().isEmpty()) {
+                    result.getErrors().add(validation.getMessage());
+                } else {
+                    for (String h : validation.getMissingHeaders()) {
+                        result.getErrors().add("Missing column: " + h);
+                    }
+                }
                 return result;
             }
 
