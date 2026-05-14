@@ -256,7 +256,8 @@ public class CandidateService {
                !equals(existing.getCohortCode(), newCandidate.getCohortCode()) ||
                !equals(existing.getDeploymentLocation(), newCandidate.getDeploymentLocation()) ||
                !equals(existing.getTrackName(), newCandidate.getTrackName()) ||
-               !equals(existing.getCandidateScore().getFinalScore(), newCandidate.getCandidateScore().getFinalScore());
+               !equals(existing.getCandidateScore().getFinalScore(), newCandidate.getCandidateScore().getFinalScore()) ||
+                !equals(existing.getCandidateScore().getInterimScore(), newCandidate.getCandidateScore().getInterimScore());
     }
 
     private Candidate mergeCandidates(Candidate existing, Candidate newCandidate) {
@@ -281,6 +282,9 @@ public class CandidateService {
         }
         if (newCandidate.getTrackName() != null && !newCandidate.getTrackName().isEmpty()) {
             existing.setTrackName(newCandidate.getTrackName());
+        }
+        if(newCandidate.getCandidateScore().getInterimScore() != null && !newCandidate.getCandidateScore().getInterimScore().isEmpty()){
+            existing.getCandidateScore().setInterimScore(newCandidate.getCandidateScore().getInterimScore());
         }
         if(newCandidate.getCandidateScore().getFinalScore() != null && !newCandidate.getCandidateScore().getFinalScore().isEmpty()){
             existing.getCandidateScore().setFinalScore(newCandidate.getCandidateScore().getFinalScore());
