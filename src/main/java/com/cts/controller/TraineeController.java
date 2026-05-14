@@ -49,10 +49,10 @@ public class TraineeController {
 
 
     @GetMapping("/candidate")
-    public ResponseEntity<?> getCandidateById(@RequestParam int id) {
+    public ResponseEntity<?> getAssociateById(@RequestParam int id) {
         logger.info("Received request to fetch candidate with ID: {}", id);
         try {
-            var candidateDto = candidateService.getCandidateById(id);
+            var candidateDto = candidateService.getAssociateById(id);
             logger.debug("Successfully fetched candidate with ID: {}", id);
             return new ResponseEntity<>(candidateDto, HttpStatus.OK);
         } catch (Exception e) {
@@ -61,18 +61,18 @@ public class TraineeController {
         }
     }
 
-    @PostMapping("/certificate/{candidateId}")
-    public ResponseEntity<?> registerCertification(@RequestBody @Valid Certification certification, @PathVariable Integer candidateId){
-        logger.info("Received request to register certification for candidateId: {}", candidateId);
+    @PostMapping("/certificate/{associateId}")
+    public ResponseEntity<?> registerCertification(@RequestBody @Valid Certification certification, @PathVariable Integer associateId){
+        logger.info("Received request to register certification for associateId: {}", associateId);
         try {
-            certification = certificationService.registerCertification(certification, candidateId);
+            certification = certificationService.registerCertification(certification, associateId);
             ApiResponse apiResponse = new ApiResponse();
             apiResponse.setCode(201);
             apiResponse.setMessage("Certificate is added");
-            logger.info("Successfully registered certification for candidateId: {}", candidateId);
+            logger.info("Successfully registered certification for associateId: {}", associateId);
             return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("Error occurred while registering certification for candidateId: {}", candidateId, e);
+            logger.error("Error occurred while registering certification for associateId: {}", associateId, e);
             return ResponseEntity.internalServerError().body("Error registering certification: " + e.getMessage());
         }
     }
@@ -119,18 +119,18 @@ public class TraineeController {
 
 
 
-    @PostMapping("/project/{candidateId}")
-    public ResponseEntity<?> addProject(@RequestBody @Valid Project candidateProject, @PathVariable Integer candidateId){
-        logger.info("Received request to add project for candidateId: {}, Project: {}", candidateId, candidateProject.getProjectName());
+    @PostMapping("/project/{associateId}")
+    public ResponseEntity<?> addProject(@RequestBody @Valid Project candidateProject, @PathVariable Integer associateId){
+        logger.info("Received request to add project for associateId: {}, Project: {}", associateId, candidateProject.getProjectName());
         try {
-            Project project = projectService.addProject(candidateProject, candidateId);
+            Project project = projectService.addProject(candidateProject, associateId);
             ApiResponse apiResponse = new ApiResponse();
             apiResponse.setCode(201);
             apiResponse.setMessage("Project is added");
-            logger.info("Successfully added project with ID: {} for candidateId: {}", project.getProjectId(), candidateId);
+            logger.info("Successfully added project with ID: {} for associateId: {}", project.getProjectId(), associateId);
             return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("Error occurred while adding project for candidateId: {}", candidateId, e);
+            logger.error("Error occurred while adding project for associateId: {}", associateId, e);
             return ResponseEntity.internalServerError().body("Error adding project: " + e.getMessage());
         }
     }
@@ -180,18 +180,18 @@ public class TraineeController {
 
 
 
-    @PutMapping("/skill/{candidateId}")
-    public ResponseEntity<?> updateSkills(@PathVariable Integer candidateId, @RequestBody Skills skills){
-        logger.info("Received request to update skills for candidateId: {}", candidateId);
+    @PutMapping("/skill/{associateId}")
+    public ResponseEntity<?> updateSkills(@PathVariable Integer associateId, @RequestBody Skills skills){
+        logger.info("Received request to update skills for associateId: {}", associateId);
         try {
-            skills = skillsService.updateSkills(skills, candidateId);
+            skills = skillsService.updateSkills(skills, associateId);
             ApiResponse apiResponse = new ApiResponse();
             apiResponse.setCode(200);
             apiResponse.setMessage("Skills are updated");
-            logger.info("Successfully updated skills for candidateId: {}", candidateId);
+            logger.info("Successfully updated skills for associateId: {}", associateId);
             return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         } catch (Exception e) {
-            logger.error("Error occurred while updating skills for candidateId: {}", candidateId, e);
+            logger.error("Error occurred while updating skills for associateId: {}", associateId, e);
             return ResponseEntity.internalServerError().body("Error updating skills: " + e.getMessage());
         }
     }
@@ -199,18 +199,18 @@ public class TraineeController {
 
 
 
-    @PostMapping("/achievement/{candidateId}")
-    public ResponseEntity<?> addAchievement(@RequestBody @Valid Achievement candidateAchievement, @PathVariable Integer candidateId){
-        logger.info("Received request to add achievement for candidateId: {}", candidateId);
+    @PostMapping("/achievement/{associateId}")
+    public ResponseEntity<?> addAchievement(@RequestBody @Valid Achievement candidateAchievement, @PathVariable Integer associateId){
+        logger.info("Received request to add achievement for associateId: {}", associateId);
         try {
-            Achievement achievement = achievementService.addAchievement(candidateAchievement, candidateId);
+            Achievement achievement = achievementService.addAchievement(candidateAchievement, associateId);
             ApiResponse apiResponse = new ApiResponse();
             apiResponse.setCode(201);
             apiResponse.setMessage("Achievement is added");
-            logger.info("Successfully added achievement with ID: {} for candidateId: {}", achievement.getAId(), candidateId);
+            logger.info("Successfully added achievement with ID: {} for associateId: {}", achievement.getAId(), associateId);
             return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("Error occurred while adding achievement for candidateId: {}", candidateId, e);
+            logger.error("Error occurred while adding achievement for associateId: {}", associateId, e);
             return ResponseEntity.internalServerError().body("Error adding achievement: " + e.getMessage());
         }
     }
@@ -245,23 +245,23 @@ public class TraineeController {
     }
 
     @DeleteMapping("/achievement/{achievementId}")
-    public ResponseEntity<?> deleteAchievement(@PathVariable Integer candidateId){
-        logger.info("Received request to delete achievement with ID: {}", candidateId);
+    public ResponseEntity<?> deleteAchievement(@PathVariable Integer achievementId){
+        logger.info("Received request to delete achievement with ID: {}", achievementId);
         try {
-            achievementService.deleteAchievement(candidateId);
-            logger.info("Successfully deleted achievement with ID: {}", candidateId);
+            achievementService.deleteAchievement(achievementId);
+            logger.info("Successfully deleted achievement with ID: {}", achievementId);
             return new ResponseEntity<>("Achievement deleted successfully!!", HttpStatus.OK);
         } catch (Exception e) {
-            logger.error("Error occurred while deleting achievement with ID: {}", candidateId, e);
+            logger.error("Error occurred while deleting achievement with ID: {}", achievementId, e);
             return ResponseEntity.internalServerError().body("Error deleting achievement: " + e.getMessage());
         }
     }
 
     //Upload Trainee Profile Photo
     // ✅ Upload / overwrite image
-    @PostMapping("/profile-photo/{candidateId}")
+    @PostMapping("/profile-photo/{associateId}")
     public ResponseEntity<String> uploadProfileImage(
-            @PathVariable Long candidateId,
+            @PathVariable Long associateId,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
 
@@ -271,7 +271,7 @@ public class TraineeController {
 
         Files.createDirectories(Paths.get(uploadDir));
 
-        String filename = candidateId + ".jpg";
+        String filename = associateId + ".jpg";
         Path filePath = Paths.get(uploadDir).resolve(filename);
 
         Files.copy(
@@ -283,13 +283,13 @@ public class TraineeController {
         return ResponseEntity.ok("Uploaded successfully");
     }
 
-    // ✅ Fetch image by candidateId
-    @GetMapping("/profile-photo/{candidateId}")
+    // ✅ Fetch image by associateId
+    @GetMapping("/profile-photo/{associateId}")
     public ResponseEntity<Resource> getProfileImage(
-            @PathVariable Long candidateId
+            @PathVariable Long associateId
     ) throws MalformedURLException {
 
-        Path imagePath = Paths.get(uploadDir).resolve(candidateId + ".jpg");
+        Path imagePath = Paths.get(uploadDir).resolve(associateId + ".jpg");
 
         if (!Files.exists(imagePath)) {
 

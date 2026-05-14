@@ -75,11 +75,13 @@ public final class CandidateSpecifications {
         };
     }
 
-    /** Exact match on the integer Candidate ID. */
-    public static Specification<Candidate> hasCandidateId(Integer candidateId) {
+    /** Exact match on the integer Associate ID. */
+    public static Specification<Candidate> hasAssociateId(Integer associateId) {
         return (root, query, cb) -> {
-            if (candidateId == null) return cb.conjunction();
-            return cb.equal(root.get("cognizantCandidateId"), candidateId);
+            if (associateId == null) return cb.conjunction();
+            return cb.equal(root.get("associateId"), associateId);
         };
     }
+
+    
 }

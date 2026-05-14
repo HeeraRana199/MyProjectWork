@@ -55,7 +55,7 @@ public class User {
     private boolean active = true;
 
     @OneToOne
-    @JoinColumn(name = "candidate_id", referencedColumnName = "cognizant_candidate_id")
+    @JoinColumn(name = "associate_id", referencedColumnName = "associate_id")
     private Candidate candidate;
 
 

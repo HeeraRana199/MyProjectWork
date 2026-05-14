@@ -19,7 +19,7 @@ public class Skills {
     private String frameworks;
 
     @OneToOne
-    @JoinColumn(name = "candidate_id")
+    @JoinColumn(name = "associate_id")
     private Candidate candidate;
 }
 

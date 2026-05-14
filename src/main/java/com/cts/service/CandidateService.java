@@ -109,8 +109,8 @@ public class CandidateService {
 
     //Get candidate info logic
     @Transactional
-    public CandidateDto getCandidateById(int candidateId) {
-        Candidate candidate = candidateRepository.findById(candidateId)
+    public CandidateDto getAssociateById(int associateId) {
+        Candidate candidate = candidateRepository.findById(associateId)
                 .orElseThrow(() -> new CandidateNotFoundException("Candidate not found"));
 
         return candidateRowMapper.convertToCandidateDto(candidate);
@@ -180,7 +180,7 @@ public class CandidateService {
                 Candidate candidate = candidates.get(i);
 
                 // Check for duplicates
-                Optional<Candidate> existing = candidateRepository.findById(candidate.getCognizantCandidateId());
+                Optional<Candidate> existing = candidateRepository.findById(candidate.getAssociateId());
 
                 if (existing.isPresent()) {
                     // Check if data has changed
@@ -237,11 +237,11 @@ public class CandidateService {
 
 
     @Transactional
-    public void deleteCandidateById(Integer candidateId) {
+    public void deleteCandidateById(Integer associateId) {
 
-        Candidate candidate = candidateRepository.findById(candidateId)
+        Candidate candidate = candidateRepository.findById(associateId)
                 .orElseThrow(() ->
-                        new CandidateNotFoundException("Candidate not found with id: " + candidateId));
+                        new CandidateNotFoundException("Candidate not found with id: " + associateId));
 
         // This single line triggers cascading delete
         candidateRepository.delete(candidate);

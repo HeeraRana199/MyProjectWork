@@ -24,6 +24,6 @@ public class Certification {
     private Boolean status;
 
     @ManyToOne
-    @JoinColumn(name="candidate_id")
+    @JoinColumn(name="associate_id")
     private Candidate candidate;
 }

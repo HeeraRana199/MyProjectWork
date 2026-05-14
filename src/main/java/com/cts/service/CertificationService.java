@@ -21,10 +21,10 @@ public class CertificationService {
     private CandidateRepository candidateRepository;
 
     //Create certification logic
-    public Certification registerCertification(Certification certification, Integer candidateId) {
-        logger.info("Registering certification for candidateId: {}, Certification: {}", candidateId, certification.getCertificationName());
+    public Certification registerCertification(Certification certification, Integer associateId) {
+        logger.info("Registering certification for associateId: {}, Certification: {}", associateId, certification.getCertificationName());
         try {
-            Candidate candidate = candidateRepository.findById(candidateId)
+            Candidate candidate = candidateRepository.findById(associateId)
                     .orElseThrow(() -> new CandidateNotFoundException("Candidate not found - to register Certification"));
             certification.setCandidate(candidate);//setting the value of Candidate in the Certification entity
             certification.setStatus(false);//setting the value of Status in the Certificate entity
@@ -32,10 +32,10 @@ public class CertificationService {
             certificates.add(certification);
             candidate.setCertificates(certificates);
             candidate = candidateRepository.save(candidate);
-            logger.info("Certification registered successfully for candidateId: {}", candidateId);
+            logger.info("Certification registered successfully for associateId: {}", associateId);
             return certification;//It will return the entire JSON body with the all fields of certification entity
         } catch (Exception e) {
-            logger.error("Error while registering certification for candidateId: {}", candidateId, e);
+            logger.error("Error while registering certification for associateId: {}", associateId, e);
             throw e;
         }
     }

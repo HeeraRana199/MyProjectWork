@@ -19,18 +19,18 @@ public class AchievementService {
     private AchievementRepository achievementRepository;
 
     //Create achievement
-    public Achievement addAchievement(Achievement achievement, Integer candidateId){
-        logger.info("Adding achievement for candidateId: {}, Title: {}", candidateId, achievement.getTitle());
+    public Achievement addAchievement(Achievement achievement, Integer associateId){
+        logger.info("Adding achievement for associateId: {}, Title: {}", associateId, achievement.getTitle());
         try {
-            Candidate candidate = candidateRepository.findById(candidateId)
+            Candidate candidate = candidateRepository.findById(associateId)
                     .orElseThrow(()-> new RuntimeException("Candidate not found for Add Achievement!!"));
 
             achievement.setCandidate(candidate);
             Achievement savedAchievement = achievementRepository.save(achievement);
-            logger.debug("Achievement saved successfully with ID: {} for candidateId: {}", savedAchievement.getAId(), candidateId);
+            logger.debug("Achievement saved successfully with ID: {} for associateId: {}", savedAchievement.getAId(), associateId);
             return savedAchievement;
         } catch (Exception e) {
-            logger.error("Error while adding achievement for candidateId: {}", candidateId, e);
+            logger.error("Error while adding achievement for associateId: {}", associateId, e);
             throw e;
         }
     }

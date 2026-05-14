@@ -16,11 +16,13 @@ import java.util.List;
 @NoArgsConstructor
 public class Candidate {
 
-    @Id
     @NotNull(message = "Cognizant Candidate ID should not be empty")
     @Column(name = "cognizant_candidate_id", unique = true)
     private Integer cognizantCandidateId; // ✅ Excel value
 
+    @Id
+    @NotNull(message = "Cognizant Associate ID should not be empty")
+    @Column(name = "associate_id", unique = true)
     private Integer associateId;
 
     @NotNull(message = "Candidate name should not be empty")

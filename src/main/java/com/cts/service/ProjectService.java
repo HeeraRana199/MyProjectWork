@@ -18,18 +18,18 @@ public class ProjectService {
     private CandidateRepository candidateRepository;
 
     //create project logic
-    public Project addProject(Project project, Integer candidateId){
-        logger.info("Adding project for candidateId: {}, Project: {}", candidateId, project.getProjectName());
+    public Project addProject(Project project, Integer associateId){
+        logger.info("Adding project for associateId: {}, Project: {}", associateId, project.getProjectName());
         try {
-            Candidate candidate = candidateRepository.findById(candidateId)
+            Candidate candidate = candidateRepository.findById(associateId)
                     .orElseThrow(()-> new RuntimeException("candidate not found for creating the project!!"));
 
             project.setCandidate(candidate);
             Project savedProject = projectRepository.save(project);
-            logger.debug("Project saved successfully with ID: {} for candidateId: {}", savedProject.getProjectId(), candidateId);
+            logger.debug("Project saved successfully with ID: {} for associateId: {}", savedProject.getProjectId(), associateId);
             return savedProject;
         } catch (Exception e) {
-            logger.error("Error while adding project for candidateId: {}", candidateId, e);
+            logger.error("Error while adding project for associateId: {}", associateId, e);
             throw e;
         }
     }

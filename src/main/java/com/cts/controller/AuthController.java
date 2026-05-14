@@ -115,19 +115,19 @@ public class AuthController {
         // Generate JWT token
         String jwt = jwtUtils.generateJwtToken(userDetails.getUsername());
 
-        // Fetch full user from DB to get role + candidateId
+        // Fetch full user from DB to get role + associateId
         User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
         Candidate candidate = candidateRepository.findByCognizantEmailID(request.getEmail()).orElse(null);
-        Integer candidateid =null;
+        Integer associateId =null;
         if(candidate!=null)
-            candidateid=  candidate.getCognizantCandidateId();
+            associateId=  candidate.getAssociateId();
 
-        // Build response - include candidateId so frontend knows which profile to load
+        // Build response - include associateId so frontend knows which profile to load
         LoginResponse response = LoginResponse.builder()
                 .token(jwt)
                 .email(user.getEmail())
                 .role(user.getRole().name())
-                .candidateId(candidateid)
+                .associateId(associateId)
                 .build();
 
         return ResponseEntity.ok(response);

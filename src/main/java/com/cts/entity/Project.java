@@ -28,6 +28,6 @@ public class Project {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "candidate_id")
+    @JoinColumn(name = "associate_id")
     private Candidate candidate;
 }

@@ -26,6 +26,6 @@ public class Achievement {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "cand_id")
+    @JoinColumn(name = "associate_id")
     private Candidate candidate;
 }

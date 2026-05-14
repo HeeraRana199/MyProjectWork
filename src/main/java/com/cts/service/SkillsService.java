@@ -18,22 +18,22 @@ public class SkillsService {
     private SkillsRepository skillsRepository;
     private CandidateRepository candidateRepository;
 
-    public Skills updateSkills(Skills skills, Integer candidateId) {
-        logger.info("Updating skills for candidateId: {}", candidateId);
+    public Skills updateSkills(Skills skills, Integer associateId) {
+        logger.info("Updating skills for associateId: {}", associateId);
         try {
-            Candidate candidate = candidateRepository.findById(candidateId)
+            Candidate candidate = candidateRepository.findById(associateId)
                     .orElseThrow(() -> new CandidateNotFoundException("Candidate not found"));
 
             Skills existingSkills;
             if (candidate.getSkills() == null) {
-                logger.debug("No existing skills found for candidateId: {}, creating new skills", candidateId);
+                logger.debug("No existing skills found for associateId: {}, creating new skills", associateId);
                 existingSkills = new Skills();
             } else {
                 existingSkills = candidate.getSkills();
             }
 
             if(skills.getProgrammings()!=null){
-                logger.debug("Updating programming skills for candidateId: {}", candidateId);
+                logger.debug("Updating programming skills for associateId: {}", associateId);
 //                if(existingSkills.getProgrammings()!=null)
 //                    existingSkills.setProgrammings(existingSkills.getProgrammings()+","+skills.getProgrammings());
 //                else
@@ -41,7 +41,7 @@ public class SkillsService {
             }
 
             if(skills.getTools()!=null){
-                logger.debug("Updating tools skills for candidateId: {}", candidateId);
+                logger.debug("Updating tools skills for associateId: {}", associateId);
 //                if(existingSkills.getTools()!=null)
 //                    existingSkills.setTools(existingSkills.getTools()+","+skills.getTools());
 //                else
@@ -49,7 +49,7 @@ public class SkillsService {
             }
 
             if(skills.getFrameworks()!=null){
-                logger.debug("Updating frameworks skills for candidateId: {}", candidateId);
+                logger.debug("Updating frameworks skills for associateId: {}", associateId);
 //                if(existingSkills.getFrameworks()!=null)
 //                    existingSkills.setFrameworks(existingSkills.getFrameworks()+","+skills.getFrameworks());
 //                else
@@ -59,10 +59,10 @@ public class SkillsService {
             candidate.setSkills(existingSkills);
             existingSkills.setCandidate(candidate);
             candidate = candidateRepository.save(candidate);
-            logger.info("Skills updated successfully for candidateId: {}", candidateId);
+            logger.info("Skills updated successfully for associateId: {}", associateId);
             return candidate.getSkills();
         } catch (Exception e) {
-            logger.error("Error while updating skills for candidateId: {}", candidateId, e);
+            logger.error("Error while updating skills for associateId: {}", associateId, e);
             throw e;
         }
     }

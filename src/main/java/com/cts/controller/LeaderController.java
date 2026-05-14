@@ -33,10 +33,10 @@ public class LeaderController {
     private final CandidateService candidateService;
 
     @GetMapping("/candidate")
-    public ResponseEntity<?> getCandidateById(@RequestParam int id) {
+    public ResponseEntity<?> getAssociateById(@RequestParam int id) {
         logger.info("Leader request to fetch candidate with ID: {}", id);
         try {
-            var candidateDto = candidateService.getCandidateById(id);
+            var candidateDto = candidateService.getAssociateById(id);
             return new ResponseEntity<>(candidateDto, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error fetching candidate {} for leader", id, e);
@@ -58,12 +58,12 @@ public class LeaderController {
             @RequestParam(required = false) String certificate,
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
-            @RequestParam(required = false) Integer candidateId,
+            @RequestParam(required = false) Integer associateId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer pageSize) {
 
-        logger.info("Filter candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, candidateId: {}, page: {}",
-                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, candidateId, page);
+        logger.info("Filter candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}, page: {}",
+                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, associateId, page);
         try {
             var result = leaderService.getFilteredCandidates(
                     programmingSkills == null ? Collections.emptyList() : programmingSkills,
@@ -72,7 +72,7 @@ public class LeaderController {
                     certificate,
                     cohortCode,
                     deploymentLocation,
-                    candidateId,
+                    associateId,
                     page,
                     pageSize
             );
@@ -95,11 +95,11 @@ public class LeaderController {
             @RequestParam(required = false) String certificate,
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
-            @RequestParam(required = false) Integer candidateId,
+            @RequestParam(required = false) Integer associateId,
             HttpServletResponse response) throws IOException {
 
-        logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, candidateId: {}",
-                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, candidateId);
+        logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}",
+                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, associateId);
 
         String timestamp = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         String filename = "candidates-" + timestamp + ".csv";
@@ -110,7 +110,7 @@ public class LeaderController {
 
         List<CandidateDto> rows = leaderService.getAllFilteredCandidates(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation, candidateId);
+                certificate, cohortCode, deploymentLocation, associateId);
 
         try (PrintWriter writer = response.getWriter()) {
             // BOM so Excel detects UTF-8 correctly

@@ -70,10 +70,10 @@ public class AdminController {
     }
 
     @GetMapping("/candidate")
-    public ResponseEntity<?> getCandidateById(@RequestParam int id) {
+    public ResponseEntity<?> getAssociateById(@RequestParam int id) {
         logger.info("Received request to fetch candidate with ID: {}", id);
         try {
-            var candidateDto = candidateService.getCandidateById(id);
+            var candidateDto = candidateService.getAssociateById(id);
             logger.debug("Successfully fetched candidate with ID: {}", id);
             return new ResponseEntity<>(candidateDto, HttpStatus.OK);
         } catch (Exception e) {
@@ -98,13 +98,13 @@ public class AdminController {
         }
     }
 
-    // ✅ Fetch image by candidateId
-    @GetMapping("/profile-photo/{candidateId}")
+    // ✅ Fetch image by Associate
+    @GetMapping("/profile-photo/{associateId}")
     public ResponseEntity<Resource> getProfileImage(
-            @PathVariable Long candidateId
+            @PathVariable Long associateId
     ) throws MalformedURLException {
 
-        Path imagePath = Paths.get(uploadDir).resolve(candidateId + ".jpg");
+        Path imagePath = Paths.get(uploadDir).resolve(associateId + ".jpg");
 
         if (!Files.exists(imagePath)) {
 
@@ -124,18 +124,18 @@ public class AdminController {
                 .body(resource);
     }
 
-    @DeleteMapping("/candidate/{candidateId}")
-    public ResponseEntity<?> deleteCandidate(@PathVariable Integer candidateId) {
-        logger.info("Received request to delete candidate with ID: {}", candidateId);
+    @DeleteMapping("/candidate/{associateId}")
+    public ResponseEntity<?> deleteCandidate(@PathVariable Integer associateId) {
+        logger.info("Received request to delete candidate with ID: {}", associateId);
 
         try {
-            candidateService.deleteCandidateById(candidateId);
-            logger.info("Successfully deleted candidate with ID: {}", candidateId);
+            candidateService.deleteCandidateById(associateId);
+            logger.info("Successfully deleted candidate with ID: {}", associateId);
 
             return ResponseEntity.ok("Candidate and all associated data deleted successfully");
 
         } catch (Exception e) {
-            logger.error("Error occurred while deleting candidate with ID: {}", candidateId, e);
+            logger.error("Error occurred while deleting candidate with ID: {}", associateId, e);
             return ResponseEntity.internalServerError()
                     .body("Error deleting candidate: " + e.getMessage());
         }

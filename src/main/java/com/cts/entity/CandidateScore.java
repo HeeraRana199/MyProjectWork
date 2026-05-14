@@ -28,6 +28,6 @@ public class CandidateScore {
     private String finalEvaluationFeedback;
 
     @OneToOne
-    @JoinColumn(name="candidate_id")
+    @JoinColumn(name="associate_id")
     private Candidate candidate;
 }
