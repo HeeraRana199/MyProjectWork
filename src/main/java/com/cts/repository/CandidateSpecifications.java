@@ -75,11 +75,22 @@ public final class CandidateSpecifications {
         };
     }
 
-    /** Exact match on the integer Associate ID. */
-    public static Specification<Candidate> hasAssociateId(Integer associateId) {
+    /**
+     * Match against one or more Associate IDs (SQL IN clause). Null / empty list
+     * / all-blank list reduces to a no-op (conjunction) so this composes cleanly
+     * with the other AND-chained specs.
+     */
+    public static Specification<Candidate> hasAssociateId(List<Integer> associateIds) {
         return (root, query, cb) -> {
-            if (associateId == null) return cb.conjunction();
-            return cb.equal(root.get("associateId"), associateId);
+            if (associateIds == null || associateIds.isEmpty()) return cb.conjunction();
+            List<Integer> cleaned = associateIds.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .filter(i -> i > 0)
+                    .distinct()
+                    .toList();
+            if (cleaned.isEmpty()) return cb.conjunction();
+            if (cleaned.size() == 1) return cb.equal(root.get("associateId"), cleaned.get(0));
+            return root.get("associateId").in(cleaned);
         };
     }
 

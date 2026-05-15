@@ -36,7 +36,7 @@ public class LeaderService {
             String certificate,
             String cohortCode,
             String deploymentLocation,
-            Integer associateId,
+            List<Integer> associateIds,
             int page,
             Integer pageSize) {
 
@@ -45,7 +45,7 @@ public class LeaderService {
 
         Specification<Candidate> spec = buildSpec(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation, associateId);
+                certificate, cohortCode, deploymentLocation, associateIds);
 
         Page<Candidate> candidatePage = candidateRepository.findAll(spec, pageable);
 
@@ -72,11 +72,11 @@ public class LeaderService {
             String certificate,
             String cohortCode,
             String deploymentLocation,
-            Integer associateId) {
+            List<Integer> associateIds) {
 
         Specification<Candidate> spec = buildSpec(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation, associateId);
+                certificate, cohortCode, deploymentLocation, associateIds);
 
         return candidateRepository.findAll(spec).stream()
                 .map(candidateRowMapper::convertToCandidateDto)
@@ -90,7 +90,7 @@ public class LeaderService {
             String certificate,
             String cohortCode,
             String deploymentLocation,
-            Integer associateId) {
+            List<Integer> associateIds) {
 
         List<String> prog = programmingSkills == null ? Collections.emptyList() : programmingSkills;
         List<String> tools = toolSkills == null ? Collections.emptyList() : toolSkills;
@@ -103,6 +103,6 @@ public class LeaderService {
                 .and(CandidateSpecifications.hasCertificate(certificate))
                 .and(CandidateSpecifications.hasCohortCode(cohortCode))
                 .and(CandidateSpecifications.hasDeploymentLocation(deploymentLocation))
-                .and(CandidateSpecifications.hasAssociateId(associateId));
+                .and(CandidateSpecifications.hasAssociateId(associateIds));
     }
 }

@@ -1,8 +1,11 @@
 package com.cts.controller;
 
 
+import com.cts.dto.AchievementDto;
 import com.cts.dto.CandidateDto;
 import com.cts.dto.CandidateScoreDto;
+import com.cts.dto.CertificationDto;
+import com.cts.dto.ProjectDto;
 import com.cts.dto.SkillsDto;
 import com.cts.service.CandidateService;
 import com.cts.service.LeaderService;
@@ -58,7 +61,7 @@ public class LeaderController {
             @RequestParam(required = false) String certificate,
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
-            @RequestParam(required = false) Integer associateId,
+            @RequestParam(required = false) List<Integer> associateId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer pageSize) {
 
@@ -95,7 +98,7 @@ public class LeaderController {
             @RequestParam(required = false) String certificate,
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
-            @RequestParam(required = false) Integer associateId,
+            @RequestParam(required = false) List<Integer> associateId,
             HttpServletResponse response) throws IOException {
 
         logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}",
@@ -147,13 +150,65 @@ public class LeaderController {
                         csv(sc == null ? "" : sc.getLanguageScore()),
                         csv(sc == null ? "" : sc.getInterimScore()),
                         csv(sc == null ? "" : sc.getFinalScore()),
-                        csv(c.getCertificates() == null ? 0 : c.getCertificates().size()),
-                        csv(c.getProjects() == null ? 0 : c.getProjects().size()),
-                        csv(c.getAchievement() == null ? 0 : c.getAchievement().size())
+                        csv(joinCertificates(c.getCertificates())),
+                        csv(joinProjects(c.getProjects())),
+                        csv(joinAchievements(c.getAchievement()))
                 ));
             }
             writer.flush();
         }
+    }
+
+    /**
+     * Build comma-separated cell contents for the certificates column.
+     * Format per entry: "Name (Provider)" — falls back to either field if one is blank.
+     */
+    private static String joinCertificates(List<CertificationDto> certs) {
+        if (certs == null || certs.isEmpty()) return "";
+        return certs.stream()
+                .filter(Objects::nonNull)
+                .map(c -> {
+                    String name = nullToEmpty(c.getCertificationName()).trim();
+                    String prov = nullToEmpty(c.getCertificationProvider()).trim();
+                    if (!name.isEmpty() && !prov.isEmpty()) return name + " (" + prov + ")";
+                    return name.isEmpty() ? prov : name;
+                })
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    /** Format per entry: "Project Name (Role)" — name only if role blank. */
+    private static String joinProjects(List<ProjectDto> projects) {
+        if (projects == null || projects.isEmpty()) return "";
+        return projects.stream()
+                .filter(Objects::nonNull)
+                .map(p -> {
+                    String name = nullToEmpty(p.getProjectName()).trim();
+                    String role = nullToEmpty(p.getRole()).trim();
+                    if (!name.isEmpty() && !role.isEmpty()) return name + " (" + role + ")";
+                    return name.isEmpty() ? role : name;
+                })
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    /** Format per entry: "Title [TYPE]" — title only if type blank. */
+    private static String joinAchievements(List<AchievementDto> achievements) {
+        if (achievements == null || achievements.isEmpty()) return "";
+        return achievements.stream()
+                .filter(Objects::nonNull)
+                .map(a -> {
+                    String title = nullToEmpty(a.getTitle()).trim();
+                    String type = nullToEmpty(a.getType()).trim();
+                    if (!title.isEmpty() && !type.isEmpty()) return title + " [" + type + "]";
+                    return title.isEmpty() ? type : title;
+                })
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
 
     /** RFC 4180 CSV-safe quoting: wrap in quotes if value contains comma, quote, or newline. */
