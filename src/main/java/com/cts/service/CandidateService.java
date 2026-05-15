@@ -7,11 +7,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.cts.dto.CandidateDto;
+import com.cts.entity.IngestionLog;
 import com.cts.entity.User;
 import com.cts.exceptions.CandidateNotFoundException;
 import com.cts.mapper.CandidateRowMapper;
 import com.cts.repository.UserRepository;
 import com.cts.util.CandidateExcelHelper;
+import com.cts.util.CandidateValidator;
+import com.cts.util.CandidateValidator.FieldError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -23,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cts.entity.Candidate;
-import com.cts.entity.CandidateScore;
 import com.cts.repository.CandidateRepository;
 
 @Service
@@ -33,6 +35,7 @@ public class CandidateService {
     private UserRepository userRepository;
     private CandidateRowMapper candidateRowMapper;
     private PasswordEncoder passwordEncoder;
+    private IngestionLogService ingestionLogService;
 
     @Value("${app.pagination.page-size:10}")
     private int defaultPageSize;
@@ -41,11 +44,13 @@ public class CandidateService {
     public CandidateService(CandidateRepository candidateRepository,
                             UserRepository userRepository,
                             CandidateRowMapper candidateRowMapper,
-                            PasswordEncoder passwordEncoder) {
+                            PasswordEncoder passwordEncoder,
+                            IngestionLogService ingestionLogService) {
         this.candidateRepository = candidateRepository;
         this.userRepository = userRepository;
         this.candidateRowMapper = candidateRowMapper;
         this.passwordEncoder = passwordEncoder;
+        this.ingestionLogService = ingestionLogService;
     }
 
     public static class ExcelUploadResult {
@@ -146,100 +151,152 @@ public class CandidateService {
         );
     }
 
-    //Excel Upload Logic with validation, batch processing, and duplicate handling
+    /**
+     * Excel Upload Logic with schema validation, per-row data validation,
+     * batch processing, duplicate handling, and full ingestion-log audit trail.
+     *
+     * Every upload attempt creates one IngestionLog row up front. Schema and
+     * data validation failures are persisted as IngestionError children using
+     * REQUIRES_NEW so the audit trail survives even if the main transaction
+     * rolls back.
+     */
     @Transactional
     public ExcelUploadResult saveCandidatesFromExcel(MultipartFile file) {
+        return saveCandidatesFromExcel(file, null);
+    }
+
+    @Transactional
+    public ExcelUploadResult saveCandidatesFromExcel(MultipartFile file, String uploadedBy) {
         ExcelUploadResult result = new ExcelUploadResult();
+        String fileName = file.getOriginalFilename();
+
+        // Create the ingestion log first so we have something to attach errors to.
+        // startLog returns null if the audit-log table itself is unreachable — we
+        // still let the upload proceed in that case (logId stays null and all
+        // ingestionLogService.* calls below short-circuit safely).
+        IngestionLog ingestionLog = ingestionLogService.startLog(fileName, uploadedBy);
+        Long logId = ingestionLog == null ? null : ingestionLog.getId();
 
         try {
             InputStream is = file.getInputStream();
 
-            // Step 1: Validate schema (strict header match against REQUIRED_HEADERS)
+            // ── Step 1: Schema validation ─────────────────────────────────
             CandidateExcelHelper.ValidationResult validation = CandidateExcelHelper.validateExcelSchema(is);
             result.setSchemaValidationMessage(validation.getMessage());
 
             if (!validation.isValid()) {
-                // Surface each missing column as its own error entry so the
-                // frontend can render a tidy bullet list instead of a single
-                // long comma-separated line.
                 if (validation.getMissingHeaders().isEmpty()) {
                     result.getErrors().add(validation.getMessage());
                 } else {
                     for (String h : validation.getMissingHeaders()) {
                         result.getErrors().add("Missing column: " + h);
+                        ingestionLogService.appendSchemaError(logId, h);
                     }
                 }
+                ingestionLogService.finalizeLog(logId,
+                        IngestionLog.Status.FAILED,
+                        0, 0, 0, 0,
+                        validation.getMessage());
                 return result;
             }
 
-            // Reset input stream for parsing
+            // ── Step 2: Parse candidates ──────────────────────────────────
             is = file.getInputStream();
-
-            // Step 2: Parse candidates
             List<Candidate> candidates = CandidateExcelHelper.excelToCandidates(is);
             result.setTotalRecords(candidates.size());
 
-            // Step 3: Process in batches of 50
+            // ── Step 3: Per-row processing (validate → dedupe → batch) ────
             final int BATCH_SIZE = 50;
             List<Candidate> toSave = new ArrayList<>();
-            List<User> users = new ArrayList<>();
             List<Candidate> toUpdate = new ArrayList<>();
 
             for (int i = 0; i < candidates.size(); i++) {
                 Candidate candidate = candidates.get(i);
+                int rowNumber = i + 2; // Excel is 1-indexed; row 1 is the header
 
-                // Check for duplicates
-                Optional<Candidate> existing = candidateRepository.findById(candidate.getAssociateId());
-
-                if (existing.isPresent()) {
-                    // Check if data has changed
-                    if (hasChanges(existing.get(), candidate)) {
-                        // Merge changes
-                        Candidate merged = mergeCandidates(existing.get(), candidate);
-                        toUpdate.add(merged);
-                        result.setMergedRecords(result.getMergedRecords() + 1);
-                    } else {
-                        // Exact duplicate, reject
+                try {
+                    // Data validation
+                    List<FieldError> fieldErrors = CandidateValidator.validate(candidate);
+                    if (!fieldErrors.isEmpty()) {
+                        List<String> columns = new ArrayList<>();
+                        List<String> messages = new ArrayList<>();
+                        for (FieldError fe : fieldErrors) {
+                            columns.add(fe.column());
+                            messages.add(fe.toString());
+                        }
+                        String joined = String.join("; ", messages);
+                        ingestionLogService.appendDataError(logId, rowNumber,
+                                candidate.getAssociateId(),
+                                candidate.getCandidateName(),
+                                columns, joined);
+                        result.getErrors().add("Row " + rowNumber + ": " + joined);
                         result.setRejectedRecords(result.getRejectedRecords() + 1);
+                        continue;
                     }
-                } else {
-                    // New candidate
-                    User user = new User();
-                    user.setPassword(passwordEncoder.encode(("welcome")));
-                    user.setEmail(candidate.getCognizantEmailID());
-                    user.setRole(User.Role.ROLE_TRAINEE);
-                    //users.add(user);
 
-                    user.setCandidate(candidate);
-                    candidate.setUser(user);
+                    // Duplicate-vs-new (primary key is associateId)
+                    Optional<Candidate> existing = candidateRepository.findById(candidate.getAssociateId());
 
-                    toSave.add(candidate);
-                }
-
-                // Process batch when it reaches BATCH_SIZE or at the end
-                if (toSave.size() >= BATCH_SIZE || i == candidates.size() - 1) {
-                    if (!toSave.isEmpty()) {
-                        candidateRepository.saveAll(toSave);
-                        //userRepository.saveAll(users);
-                        result.setSavedRecords(result.getSavedRecords() + toSave.size());
-                        toSave.clear();
+                    if (existing.isPresent()) {
+                        if (hasChanges(existing.get(), candidate)) {
+                            Candidate merged = mergeCandidates(existing.get(), candidate);
+                            toUpdate.add(merged);
+                            result.setMergedRecords(result.getMergedRecords() + 1);
+                        } else {
+                            result.setRejectedRecords(result.getRejectedRecords() + 1);
+                        }
+                    } else {
+                        User user = new User();
+                        user.setPassword(passwordEncoder.encode("welcome"));
+                        user.setEmail(candidate.getCognizantEmailID());
+                        user.setRole(User.Role.ROLE_TRAINEE);
+                        user.setCandidate(candidate);
+                        candidate.setUser(user);
+                        toSave.add(candidate);
                     }
-                }
 
-                // Process updates in batches too
-                if (toUpdate.size() >= BATCH_SIZE || i == candidates.size() - 1) {
-                    if (!toUpdate.isEmpty()) {
-                        candidateRepository.saveAll(toUpdate);
-                        //userRepository.saveAll(users);
-                        toUpdate.clear();
+                    // Flush batches
+                    boolean lastRow = i == candidates.size() - 1;
+                    if (toSave.size() >= BATCH_SIZE || lastRow) {
+                        if (!toSave.isEmpty()) {
+                            candidateRepository.saveAll(toSave);
+                            result.setSavedRecords(result.getSavedRecords() + toSave.size());
+                            toSave.clear();
+                        }
                     }
+                    if (toUpdate.size() >= BATCH_SIZE || lastRow) {
+                        if (!toUpdate.isEmpty()) {
+                            candidateRepository.saveAll(toUpdate);
+                            toUpdate.clear();
+                        }
+                    }
+                } catch (Exception rowEx) {
+                    ingestionLogService.appendProcessingError(logId, rowNumber, rowEx.getMessage());
+                    result.getErrors().add("Row " + rowNumber + ": Processing error: " + rowEx.getMessage());
+                    result.setRejectedRecords(result.getRejectedRecords() + 1);
                 }
             }
 
-
         } catch (Exception e) {
             result.getErrors().add("Failed to process Excel file: " + e.getMessage());
+            ingestionLogService.appendProcessingError(logId, 0, e.getMessage());
         }
+
+        // ── Finalize the audit log with status + counts ────────────────────
+        IngestionLog.Status finalStatus;
+        if (result.getRejectedRecords() == 0 && (result.getSavedRecords() + result.getMergedRecords()) > 0) {
+            finalStatus = IngestionLog.Status.SUCCESS;
+        } else if (result.getSavedRecords() + result.getMergedRecords() > 0) {
+            finalStatus = IngestionLog.Status.PARTIAL;
+        } else {
+            finalStatus = IngestionLog.Status.FAILED;
+        }
+        ingestionLogService.finalizeLog(logId, finalStatus,
+                result.getTotalRecords(),
+                result.getSavedRecords(),
+                result.getMergedRecords(),
+                result.getRejectedRecords(),
+                result.getSchemaValidationMessage());
 
         return result;
     }

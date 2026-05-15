@@ -1,9 +1,12 @@
 package com.cts.controller;
 
 import com.cts.entity.Candidate;
+import com.cts.entity.IngestionError;
+import com.cts.entity.IngestionLog;
 import com.cts.entity.User;
 import com.cts.service.AuthService;
 import com.cts.service.CandidateService;
+import com.cts.service.IngestionLogService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -23,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 
 @RestController
 //@AllArgsConstructor
@@ -33,6 +37,7 @@ public class AdminController {
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
     private final CandidateService candidateService;
     private final AuthService authService;
+    private final IngestionLogService ingestionLogService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -51,11 +56,14 @@ public class AdminController {
     public ResponseEntity<?> uploadExcel(@RequestPart MultipartFile file) {
         logger.info("Received Excel upload request with file: {}, size: {} bytes", file.getOriginalFilename(), file.getSize());
         try {
-            CandidateService.ExcelUploadResult result = candidateService.saveCandidatesFromExcel(file);
+            // Best-effort attribution: pull the admin's email from the SecurityContext if present.
+            var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String uploadedBy = (auth != null && auth.isAuthenticated()) ? auth.getName() : null;
+
+            CandidateService.ExcelUploadResult result = candidateService.saveCandidatesFromExcel(file, uploadedBy);
 
             if (!result.getErrors().isEmpty()) {
                 logger.warn("Excel validation failed for file: {}. Errors: {}", file.getOriginalFilename(), result.getErrors());
-                System.out.println(result);
                 return ResponseEntity.badRequest().body(result);
             }
 
@@ -122,6 +130,40 @@ public class AdminController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(resource);
+    }
+
+    // ── Ingestion Logs (Admin → Ingestion Logs tab) ───────────────────────────
+
+    /** List every upload attempt — most recent first. */
+    @GetMapping("/ingestion-logs")
+    public ResponseEntity<?> listIngestionLogs() {
+        try {
+            List<IngestionLog> logs = ingestionLogService.getAllLogs();
+            return ResponseEntity.ok(logs);
+        } catch (Exception e) {
+            logger.error("Error fetching ingestion logs", e);
+            return ResponseEntity.internalServerError().body("Error fetching ingestion logs: " + e.getMessage());
+        }
+    }
+
+    /** Drill-down for one upload: returns the log summary + its full error list. */
+    @GetMapping("/ingestion-logs/{id}")
+    public ResponseEntity<?> getIngestionLogDetails(@PathVariable Long id) {
+        try {
+            IngestionLog log = ingestionLogService.getLog(id);
+            if (log == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(java.util.Map.of("message", "Ingestion log not found"));
+            }
+            List<IngestionError> errors = ingestionLogService.getErrorsForLog(id);
+            return ResponseEntity.ok(java.util.Map.of(
+                    "log", log,
+                    "errors", errors
+            ));
+        } catch (Exception e) {
+            logger.error("Error fetching ingestion log {}", id, e);
+            return ResponseEntity.internalServerError().body("Error fetching ingestion log: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/candidate/{associateId}")
