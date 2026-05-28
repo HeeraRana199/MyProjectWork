@@ -99,18 +99,18 @@ public class AdminController {
 
             CandidateService.ExcelUploadResult result = candidateService.saveCandidatesFromExcel(file, uploadedBy);
 
-            // Classify the outcome:
-            //  - Nothing was even parseable (schema invalid / unreadable file) → 400
-            //  - All rows rejected (zero saved + zero merged) → 400
-            //  - At least one row saved or merged → 200, even if some rows were
-            //    rejected as duplicates / invalid. Per-row errors travel back
-            //    inside result.errors[] and the frontend renders them in the
-            //    amber "rows had issues" section under the green stats card.
-            int succeeded = result.getSavedRecords() + result.getMergedRecords();
-            boolean nothingProcessed = result.getTotalRecords() == 0 && !result.getErrors().isEmpty();
-            boolean allRejected = result.getTotalRecords() > 0 && succeeded == 0;
-
-            if (nothingProcessed || allRejected) {
+            // Classify the outcome strictly on whether the file was PARSEABLE
+            // — anything that reached the per-row pipeline counts as a normal
+            // result and is returned with HTTP 200 plus a full stats body.
+            //
+            //  - totalRecords == 0  → file was unreadable / schema check failed
+            //                         → HTTP 400 (the only true failure case)
+            //  - totalRecords  > 0  → HTTP 200, even when every row was rejected
+            //                         (e.g. re-uploading an already-ingested file).
+            //                         The frontend stats card shows Total/Saved/
+            //                         Merged/Rejected and the amber "rows had
+            //                         issues" section lists the per-row reasons.
+            if (result.getTotalRecords() == 0) {
                 logger.warn("Excel upload failed for file: {}. saved={}, merged={}, rejected={}, errors={}",
                         file.getOriginalFilename(),
                         result.getSavedRecords(), result.getMergedRecords(),
