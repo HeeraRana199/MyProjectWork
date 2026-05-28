@@ -44,10 +44,47 @@ public class AdminController {
 
 
     @PostMapping("/leaderRegister")
-    public ResponseEntity<User> leaderRegister(@RequestBody User user) {
-        // Authenticate using Spring Security (validates username + password via BCrypt)
-        User savedUser = authService.leaderRegister(user);
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    public ResponseEntity<?> leaderRegister(@RequestBody User user) {
+        try {
+            User savedUser = authService.leaderRegister(user);
+            return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+        } catch (org.springframework.dao.DataIntegrityViolationException dive) {
+            // Most likely a duplicate email (unique constraint).
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("message", "A leader with that email already exists."));
+        } catch (Exception e) {
+            logger.error("Failed to register leader: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(java.util.Map.of("message", "Failed to register leader: " + e.getMessage()));
+        }
+    }
+
+    /** List every leader account (most recent first). */
+    @GetMapping("/leaders")
+    public ResponseEntity<?> listLeaders() {
+        try {
+            return ResponseEntity.ok(authService.listLeaders());
+        } catch (Exception e) {
+            logger.error("Failed to fetch leaders", e);
+            return ResponseEntity.internalServerError()
+                    .body(java.util.Map.of("message", "Failed to fetch leaders: " + e.getMessage()));
+        }
+    }
+
+    /** Delete a leader account by its user id. Rejects if the account isn't a leader. */
+    @DeleteMapping("/leader/{userId}")
+    public ResponseEntity<?> deleteLeader(@PathVariable Long userId) {
+        try {
+            authService.deleteLeader(userId);
+            return ResponseEntity.ok(java.util.Map.of("userId", userId, "message", "Leader deleted"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Failed to delete leader {}", userId, e);
+            return ResponseEntity.internalServerError()
+                    .body(java.util.Map.of("message", "Failed to delete leader: " + e.getMessage()));
+        }
     }
 
 
@@ -62,8 +99,22 @@ public class AdminController {
 
             CandidateService.ExcelUploadResult result = candidateService.saveCandidatesFromExcel(file, uploadedBy);
 
-            if (!result.getErrors().isEmpty()) {
-                logger.warn("Excel validation failed for file: {}. Errors: {}", file.getOriginalFilename(), result.getErrors());
+            // Classify the outcome:
+            //  - Nothing was even parseable (schema invalid / unreadable file) → 400
+            //  - All rows rejected (zero saved + zero merged) → 400
+            //  - At least one row saved or merged → 200, even if some rows were
+            //    rejected as duplicates / invalid. Per-row errors travel back
+            //    inside result.errors[] and the frontend renders them in the
+            //    amber "rows had issues" section under the green stats card.
+            int succeeded = result.getSavedRecords() + result.getMergedRecords();
+            boolean nothingProcessed = result.getTotalRecords() == 0 && !result.getErrors().isEmpty();
+            boolean allRejected = result.getTotalRecords() > 0 && succeeded == 0;
+
+            if (nothingProcessed || allRejected) {
+                logger.warn("Excel upload failed for file: {}. saved={}, merged={}, rejected={}, errors={}",
+                        file.getOriginalFilename(),
+                        result.getSavedRecords(), result.getMergedRecords(),
+                        result.getRejectedRecords(), result.getErrors());
                 return ResponseEntity.badRequest().body(result);
             }
 

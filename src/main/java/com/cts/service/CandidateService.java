@@ -36,6 +36,7 @@ public class CandidateService {
     private CandidateRowMapper candidateRowMapper;
     private PasswordEncoder passwordEncoder;
     private IngestionLogService ingestionLogService;
+    private CandidateBatchHelper candidateBatchHelper;
 
     @Value("${app.pagination.page-size:10}")
     private int defaultPageSize;
@@ -45,11 +46,13 @@ public class CandidateService {
                             UserRepository userRepository,
                             CandidateRowMapper candidateRowMapper,
                             PasswordEncoder passwordEncoder,
-                            IngestionLogService ingestionLogService) {
+                            IngestionLogService ingestionLogService,
+                            CandidateBatchHelper candidateBatchHelper) {
         this.candidateRepository = candidateRepository;
         this.userRepository = userRepository;
         this.candidateRowMapper = candidateRowMapper;
         this.passwordEncoder = passwordEncoder;
+        this.candidateBatchHelper = candidateBatchHelper;
         this.ingestionLogService = ingestionLogService;
     }
 
@@ -205,17 +208,28 @@ public class CandidateService {
             List<Candidate> candidates = CandidateExcelHelper.excelToCandidates(is);
             result.setTotalRecords(candidates.size());
 
-            // ── Step 3: Per-row processing (validate → dedupe → batch) ────
-            final int BATCH_SIZE = 50;
-            List<Candidate> toSave = new ArrayList<>();
-            List<Candidate> toUpdate = new ArrayList<>();
+            // ── Step 3: Per-row processing (validate → dedupe → save) ─────
+            // Each row is saved in its OWN REQUIRES_NEW sub-transaction via
+            // candidateBatchHelper. That means:
+            //  - Unique rows commit independently. One row's failure cannot
+            //    poison the rest of the upload with "rollback-only".
+            //  - Within-batch duplicates are caught up-front and rejected
+            //    cleanly before they ever hit the DB.
+            //  - Pre-existing rows in the DB are merged in their own sub-txn.
+
+            // Track IDs already accepted within THIS upload so a second row
+            // with the same Associate Id / Cognizant Candidate ID / Email is
+            // rejected up-front rather than tripping a SQL unique constraint.
+            java.util.Set<Integer> seenAssociateIds = new java.util.HashSet<>();
+            java.util.Set<Integer> seenCognizantIds = new java.util.HashSet<>();
+            java.util.Set<String>  seenEmails       = new java.util.HashSet<>();
 
             for (int i = 0; i < candidates.size(); i++) {
                 Candidate candidate = candidates.get(i);
                 int rowNumber = i + 2; // Excel is 1-indexed; row 1 is the header
 
                 try {
-                    // Data validation
+                    // ── 3a. Data validation ─────────────────────────────────
                     List<FieldError> fieldErrors = CandidateValidator.validate(candidate);
                     if (!fieldErrors.isEmpty()) {
                         List<String> columns = new ArrayList<>();
@@ -234,16 +248,57 @@ public class CandidateService {
                         continue;
                     }
 
-                    // Duplicate-vs-new (primary key is associateId)
+                    // ── 3b. Within-batch duplicate guard ───────────────────
+                    Integer assocId = candidate.getAssociateId();
+                    Integer cogId   = candidate.getCognizantCandidateId();
+                    String  email   = candidate.getCognizantEmailID() == null
+                            ? null : candidate.getCognizantEmailID().trim().toLowerCase();
+
+                    String duplicateReason = null;
+                    String duplicateColumn = null;
+                    if (assocId != null && seenAssociateIds.contains(assocId)) {
+                        duplicateColumn = "Associate Id";
+                        duplicateReason = "Duplicate Associate Id " + assocId
+                                + " — already present earlier in this upload";
+                    } else if (cogId != null && seenCognizantIds.contains(cogId)) {
+                        duplicateColumn = "Cognizant Candidate ID";
+                        duplicateReason = "Duplicate Cognizant Candidate ID " + cogId
+                                + " — already present earlier in this upload";
+                    } else if (email != null && !email.isEmpty() && seenEmails.contains(email)) {
+                        duplicateColumn = "Cognizant Email ID";
+                        duplicateReason = "Duplicate Cognizant Email ID " + candidate.getCognizantEmailID()
+                                + " — already present earlier in this upload";
+                    }
+                    if (duplicateReason != null) {
+                        ingestionLogService.appendDataError(logId, rowNumber,
+                                assocId,
+                                candidate.getCandidateName(),
+                                List.of(duplicateColumn),
+                                duplicateReason);
+                        result.getErrors().add("Row " + rowNumber + ": " + duplicateReason);
+                        result.setRejectedRecords(result.getRejectedRecords() + 1);
+                        continue;
+                    }
+
+                    // ── 3c. Decide: existing → merge, or new → insert ──────
                     Optional<Candidate> existing = candidateRepository.findById(candidate.getAssociateId());
+
+                    boolean accepted = false;
+                    Candidate toPersist = null;
+                    String operation = "save";
 
                     if (existing.isPresent()) {
                         if (hasChanges(existing.get(), candidate)) {
-                            Candidate merged = mergeCandidates(existing.get(), candidate);
-                            toUpdate.add(merged);
-                            result.setMergedRecords(result.getMergedRecords() + 1);
+                            toPersist = mergeCandidates(existing.get(), candidate);
+                            operation = "merge";
                         } else {
+                            // Exact match against DB → already saved; reject the duplicate
                             result.setRejectedRecords(result.getRejectedRecords() + 1);
+                            // Still mark as "seen" so subsequent in-file dupes catch it too
+                            if (assocId != null) seenAssociateIds.add(assocId);
+                            if (cogId != null) seenCognizantIds.add(cogId);
+                            if (email != null && !email.isEmpty()) seenEmails.add(email);
+                            continue;
                         }
                     } else {
                         User user = new User();
@@ -252,25 +307,48 @@ public class CandidateService {
                         user.setRole(User.Role.ROLE_TRAINEE);
                         user.setCandidate(candidate);
                         candidate.setUser(user);
-                        toSave.add(candidate);
+                        toPersist = candidate;
                     }
 
-                    // Flush batches
-                    boolean lastRow = i == candidates.size() - 1;
-                    if (toSave.size() >= BATCH_SIZE || lastRow) {
-                        if (!toSave.isEmpty()) {
-                            candidateRepository.saveAll(toSave);
-                            result.setSavedRecords(result.getSavedRecords() + toSave.size());
-                            toSave.clear();
+                    // ── 3d. Persist in its OWN sub-transaction ─────────────
+                    // If the DB rejects this row (e.g. concurrent insert by
+                    // another upload, future schema constraint), only THIS
+                    // sub-transaction rolls back. The loop keeps going.
+                    try {
+                        candidateBatchHelper.saveOne(toPersist);
+                        accepted = true;
+                        if ("merge".equals(operation)) {
+                            result.setMergedRecords(result.getMergedRecords() + 1);
+                        } else {
+                            result.setSavedRecords(result.getSavedRecords() + 1);
                         }
+                    } catch (Exception persistEx) {
+                        // Unforeseen DB-level rejection (constraint violation, etc.).
+                        // Walk to the root cause for a more useful message than the
+                        // outer Hibernate wrapping ("could not execute statement").
+                        Throwable root = persistEx;
+                        while (root.getCause() != null && root.getCause() != root) {
+                            root = root.getCause();
+                        }
+                        String reason = root.getMessage();
+                        if (reason == null || reason.isBlank()) {
+                            reason = root.getClass().getSimpleName();
+                        }
+                        ingestionLogService.appendProcessingError(logId, rowNumber, reason);
+                        result.getErrors().add("Row " + rowNumber + ": Could not save — " + reason);
+                        result.setRejectedRecords(result.getRejectedRecords() + 1);
                     }
-                    if (toUpdate.size() >= BATCH_SIZE || lastRow) {
-                        if (!toUpdate.isEmpty()) {
-                            candidateRepository.saveAll(toUpdate);
-                            toUpdate.clear();
-                        }
+
+                    // Mark IDs as seen ONLY when the row was actually accepted,
+                    // so a failed save doesn't prevent a subsequent (potentially
+                    // legitimate) row from re-trying.
+                    if (accepted) {
+                        if (assocId != null) seenAssociateIds.add(assocId);
+                        if (cogId != null) seenCognizantIds.add(cogId);
+                        if (email != null && !email.isEmpty()) seenEmails.add(email);
                     }
                 } catch (Exception rowEx) {
+                    // Non-DB exception in the row pipeline (validator throws, etc.)
                     ingestionLogService.appendProcessingError(logId, rowNumber, rowEx.getMessage());
                     result.getErrors().add("Row " + rowNumber + ": Processing error: " + rowEx.getMessage());
                     result.setRejectedRecords(result.getRejectedRecords() + 1);

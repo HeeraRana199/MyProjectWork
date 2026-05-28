@@ -1,5 +1,6 @@
 package com.cts.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -33,10 +34,17 @@ public class User {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    /** BCrypt-hashed password */
+    /**
+     * BCrypt-hashed password.
+     * WRITE_ONLY = accepted from request bodies (registration / leaderRegister)
+     * but never serialized back to clients (leader list, login response, etc.).
+     * NB: @JsonIgnore would also block deserialization — that's why we use the
+     * write-only access mode instead.
+     */
     @NotNull(message = "Password should not be empty")
     @Size(min = 6, message = "Password must be at least 6 characters long")
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     /**

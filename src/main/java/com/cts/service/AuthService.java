@@ -25,6 +25,21 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+    /** List every account with role ROLE_LEADER (most recent first). */
+    public java.util.List<User> listLeaders() {
+        return userRepository.findByRoleOrderByUserIdDesc(User.Role.ROLE_LEADER);
+    }
+
+    /** Delete a leader account. Throws if the user doesn't exist or isn't a leader. */
+    public void deleteLeader(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (user.getRole() != User.Role.ROLE_LEADER) {
+            throw new IllegalArgumentException("Account is not a leader — refusing to delete via this endpoint");
+        }
+        userRepository.delete(user);
+    }
+
     /**
      * Change the password for an authenticated user.
      * Verifies the current password via BCrypt before updating.
