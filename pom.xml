@@ -152,6 +152,40 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- JaCoCo — line / branch coverage report.
+                 Run `mvn test` and open target/site/jacoco/index.html. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <!-- DTOs, entities, config classes have no behavior to cover -->
+                        <exclude>com/cts/dto/**</exclude>
+                        <exclude>com/cts/entity/**</exclude>
+                        <exclude>com/cts/model/**</exclude>
+                        <exclude>com/cts/config/**</exclude>
+                        <exclude>com/cts/security/**</exclude>
+                        <exclude>com/cts/Demo1Application.*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

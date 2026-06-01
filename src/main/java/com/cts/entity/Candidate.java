@@ -36,6 +36,7 @@ public class Candidate {
     private String cohortCode;
     private String deploymentLocation;
     private String trackName;
+    private String sl;
     private LocalDate doj;
 
     @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL)

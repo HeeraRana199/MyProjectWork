@@ -85,7 +85,6 @@ public class CandidateExcelHelper {
             "Exit date/Break Start Date",
             "Break Resumption date",
             "Exit Initiated date",
-            "Performance Health Score",
             "Technical Training Status",
             "Final Status",
             "On Hold Reason",
@@ -358,10 +357,10 @@ public class CandidateExcelHelper {
                     candidate.setDeploymentLocation(getCellAsStringByHeader(row, headerIndexMap, "deployment location"));
                     candidate.setTrackName(getCellAsStringByHeader(row, headerIndexMap, "track name (as curriculum)"));
                     candidate.setCohortCode(getCellAsStringByHeader(row, headerIndexMap, "cohort code"));
+                    candidate.setSl(getCellAsStringByHeader(row, headerIndexMap, "sl"));
                     candidate.setDoj(getCellAsLocalDateByHeader(row, headerIndexMap, "doj"));
 
                     CandidateScore candidateScore = new CandidateScore();
-                    candidateScore.setPerformanceScore(getCellAsDoubleByHeader(row, headerIndexMap, "performance health score"));
                     candidateScore.setAttendanceScore(getCellAsDoubleByHeader(row, headerIndexMap, "attendance health score"));
                     candidateScore.setLanguageScore(getCellAsStringByHeader(row, headerIndexMap, "language assessment score"));
                     candidateScore.setInterimScore(getCellAsStringByHeader(row, headerIndexMap, "interim rag"));

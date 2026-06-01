@@ -14,7 +14,6 @@ public class CandidateScore {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer candidateScoreId;
 
-    private Double performanceScore;//double
     private Double attendanceScore;//double
     private String languageScore;//string
     private String interimScore;

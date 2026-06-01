@@ -398,6 +398,7 @@ public class CandidateService {
                !equals(existing.getCognizantEmailID(), newCandidate.getCognizantEmailID()) ||
                !equals(existing.getGender(), newCandidate.getGender()) ||
                !equals(existing.getCohortCode(), newCandidate.getCohortCode()) ||
+               !equals(existing.getSl(), newCandidate.getSl()) ||
                !equals(existing.getDeploymentLocation(), newCandidate.getDeploymentLocation()) ||
                !equals(existing.getTrackName(), newCandidate.getTrackName()) ||
                !equals(existing.getCandidateScore().getFinalScore(), newCandidate.getCandidateScore().getFinalScore()) ||
@@ -420,6 +421,9 @@ public class CandidateService {
         }
         if (newCandidate.getCohortCode() != null && !newCandidate.getCohortCode().isEmpty()) {
             existing.setCohortCode(newCandidate.getCohortCode());
+        }
+        if (newCandidate.getSl() != null && !newCandidate.getSl().isEmpty()) {
+            existing.setSl(newCandidate.getSl());
         }
         if (newCandidate.getDeploymentLocation() != null && !newCandidate.getDeploymentLocation().isEmpty()) {
             existing.setDeploymentLocation(newCandidate.getDeploymentLocation());

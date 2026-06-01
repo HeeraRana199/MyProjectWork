@@ -37,6 +37,7 @@ public class LeaderService {
             String cohortCode,
             String deploymentLocation,
             List<Integer> associateIds,
+            List<String> sls,
             int page,
             Integer pageSize) {
 
@@ -45,7 +46,7 @@ public class LeaderService {
 
         Specification<Candidate> spec = buildSpec(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation, associateIds);
+                certificate, cohortCode, deploymentLocation, associateIds, sls);
 
         Page<Candidate> candidatePage = candidateRepository.findAll(spec, pageable);
 
@@ -72,11 +73,12 @@ public class LeaderService {
             String certificate,
             String cohortCode,
             String deploymentLocation,
-            List<Integer> associateIds) {
+            List<Integer> associateIds,
+            List<String> sls) {
 
         Specification<Candidate> spec = buildSpec(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation, associateIds);
+                certificate, cohortCode, deploymentLocation, associateIds, sls);
 
         return candidateRepository.findAll(spec).stream()
                 .map(candidateRowMapper::convertToCandidateDto)
@@ -90,7 +92,8 @@ public class LeaderService {
             String certificate,
             String cohortCode,
             String deploymentLocation,
-            List<Integer> associateIds) {
+            List<Integer> associateIds,
+            List<String> sls) {
 
         List<String> prog = programmingSkills == null ? Collections.emptyList() : programmingSkills;
         List<String> tools = toolSkills == null ? Collections.emptyList() : toolSkills;
@@ -103,6 +106,7 @@ public class LeaderService {
                 .and(CandidateSpecifications.hasCertificate(certificate))
                 .and(CandidateSpecifications.hasCohortCode(cohortCode))
                 .and(CandidateSpecifications.hasDeploymentLocation(deploymentLocation))
-                .and(CandidateSpecifications.hasAssociateId(associateIds));
+                .and(CandidateSpecifications.hasAssociateId(associateIds))
+                .and(CandidateSpecifications.hasSls(sls));
     }
 }

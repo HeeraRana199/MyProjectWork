@@ -28,6 +28,7 @@ public class CandidateRowMapper {
         candidateDto.setCohortCode(candidate.getCohortCode());
         candidateDto.setDeploymentLocation(candidate.getDeploymentLocation());
         candidateDto.setTrackName(candidate.getTrackName());
+        candidateDto.setSl(candidate.getSl());
         candidateDto.setDoj(candidate.getDoj());
 
 
@@ -86,7 +87,6 @@ public class CandidateRowMapper {
         if (candidate.getCandidateScore() != null) {
             CandidateScoreDto candidateScoreDto = new CandidateScoreDto();
             candidateScoreDto.setCandidateScoreId(candidate.getCandidateScore().getCandidateScoreId());
-            candidateScoreDto.setPerformanceScore(candidate.getCandidateScore().getPerformanceScore());
             candidateScoreDto.setAttendanceScore(candidate.getCandidateScore().getAttendanceScore());
             candidateScoreDto.setLanguageScore(candidate.getCandidateScore().getLanguageScore());
             candidateScoreDto.setInterimScore(candidate.getCandidateScore().getInterimScore());

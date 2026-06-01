@@ -21,6 +21,7 @@ public class CandidateDto {
     private String cohortCode;
     private String deploymentLocation;
     private String trackName;
+    private String sl;
     private LocalDate doj;
 
     private List<CertificationDto> certificates;

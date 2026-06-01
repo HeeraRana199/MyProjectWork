@@ -68,6 +68,27 @@ public final class CandidateSpecifications {
         };
     }
 
+    /**
+     * Multi-value SL filter — OR-combined within the list (case-insensitive equality).
+     * A blank / null / all-blank list reduces to cb.conjunction() so it composes
+     * cleanly with the other AND-chained specs.
+     */
+    public static Specification<Candidate> hasSls(List<String> sls) {
+        return (root, query, cb) -> {
+            if (sls == null || sls.isEmpty()) return cb.conjunction();
+            List<String> cleaned = sls.stream()
+                    .filter(s -> !isBlank(s))
+                    .map(s -> s.toLowerCase().trim())
+                    .distinct()
+                    .toList();
+            if (cleaned.isEmpty()) return cb.conjunction();
+            Predicate[] preds = cleaned.stream()
+                    .map(v -> cb.equal(cb.lower(root.get("sl")), v))
+                    .toArray(Predicate[]::new);
+            return preds.length == 1 ? preds[0] : cb.or(preds);
+        };
+    }
+
     public static Specification<Candidate> hasDeploymentLocation(String location) {
         return (root, query, cb) -> {
             if (isBlank(location)) return cb.conjunction();

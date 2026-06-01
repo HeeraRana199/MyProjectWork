@@ -62,11 +62,12 @@ public class LeaderController {
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
             @RequestParam(required = false) List<Integer> associateId,
+            @RequestParam(required = false) List<String> sls,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer pageSize) {
 
-        logger.info("Filter candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}, page: {}",
-                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, associateId, page);
+        logger.info("Filter candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}, sls: {}, page: {}",
+                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, associateId, sls, page);
         try {
             var result = leaderService.getFilteredCandidates(
                     programmingSkills == null ? Collections.emptyList() : programmingSkills,
@@ -76,6 +77,7 @@ public class LeaderController {
                     cohortCode,
                     deploymentLocation,
                     associateId,
+                    sls,
                     page,
                     pageSize
             );
@@ -99,10 +101,11 @@ public class LeaderController {
             @RequestParam(required = false) String cohortCode,
             @RequestParam(required = false) String deploymentLocation,
             @RequestParam(required = false) List<Integer> associateId,
+            @RequestParam(required = false) List<String> sls,
             HttpServletResponse response) throws IOException {
 
-        logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}",
-                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, associateId);
+        logger.info("Export candidates - prog: {}, tools: {}, fw: {}, cert: {}, cohort: {}, loc: {}, associateId: {}, sls: {}",
+                programmingSkills, toolSkills, frameworkSkills, certificate, cohortCode, deploymentLocation, associateId, sls);
 
         String timestamp = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         String filename = "candidates-" + timestamp + ".csv";
@@ -113,7 +116,7 @@ public class LeaderController {
 
         List<CandidateDto> rows = leaderService.getAllFilteredCandidates(
                 programmingSkills, toolSkills, frameworkSkills,
-                certificate, cohortCode, deploymentLocation, associateId);
+                certificate, cohortCode, deploymentLocation, associateId, sls);
 
         try (PrintWriter writer = response.getWriter()) {
             // BOM so Excel detects UTF-8 correctly
@@ -121,9 +124,9 @@ public class LeaderController {
 
             writer.println(String.join(",",
                     "Candidate ID", "Associate ID", "Name", "Email", "Gender",
-                    "Track", "Cohort Code", "Deployment Location", "Date of Joining",
+                    "Track", "Cohort Code", "SL", "Deployment Location", "Date of Joining",
                     "Programming Skills", "Tool Skills", "Framework Skills",
-                    "Overall Score", "Attendance Score", "Language Score",
+                    "Attendance Score", "Language Score",
                     "Interim RAG", "Final RAG",
                     "Certifications", "Projects", "Achievements"
             ));
@@ -140,12 +143,12 @@ public class LeaderController {
                         csv(c.getGender()),
                         csv(c.getTrackName()),
                         csv(c.getCohortCode()),
+                        csv(c.getSl()),
                         csv(c.getDeploymentLocation()),
                         csv(c.getDoj()),
                         csv(s == null ? "" : s.getProgrammings()),
                         csv(s == null ? "" : s.getTools()),
                         csv(s == null ? "" : s.getFrameworks()),
-                        csv(sc == null ? "" : sc.getPerformanceScore()),
                         csv(sc == null ? "" : sc.getAttendanceScore()),
                         csv(sc == null ? "" : sc.getLanguageScore()),
                         csv(sc == null ? "" : sc.getInterimScore()),

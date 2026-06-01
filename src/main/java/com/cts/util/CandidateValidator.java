@@ -108,10 +108,6 @@ public final class CandidateValidator {
         if (score == null) {
             errors.add(new FieldError("CandidateScore", "must not be null"));
         } else {
-            if (score.getPerformanceScore() != null &&
-                    (score.getPerformanceScore() < 0 || score.getPerformanceScore() > 100)) {
-                errors.add(new FieldError("Performance Health Score", "must be between 0 and 100"));
-            }
             if (score.getAttendanceScore() != null &&
                     (score.getAttendanceScore() < 0 || score.getAttendanceScore() > 100)) {
                 errors.add(new FieldError("Attendance Health Score", "must be between 0 and 100"));
