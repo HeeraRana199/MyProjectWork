@@ -14,7 +14,7 @@ public class CandidateScoreDto {
     private String languageScore;
     private String interimScore;
     private String finalScore;
-    private String interimEvaluationFeedback;
+    // private String interimEvaluationFeedback; // unused — commented out per project decision
     private String finalEvaluationFeedback;
     private String readiness;
 }

@@ -60,11 +60,12 @@ public final class CandidateValidator {
             errors.add(new FieldError("Associate Id", "must be a positive integer"));
         }
 
-        if (candidate.getCognizantCandidateId() == null) {
-            errors.add(new FieldError("Cognizant Candidate ID", "must not be empty"));
-        } else if (candidate.getCognizantCandidateId() <= 0) {
-            errors.add(new FieldError("Cognizant Candidate ID", "must be a positive integer"));
-        }
+        // Cognizant Candidate ID validation commented out per project decision
+        // if (candidate.getCognizantCandidateId() == null) {
+        //     errors.add(new FieldError("Cognizant Candidate ID", "must not be empty"));
+        // } else if (candidate.getCognizantCandidateId() <= 0) {
+        //     errors.add(new FieldError("Cognizant Candidate ID", "must be a positive integer"));
+        // }
 
         // ── name ───────────────────────────────────────────────────────────
         if (isBlank(candidate.getCandidateName())) {

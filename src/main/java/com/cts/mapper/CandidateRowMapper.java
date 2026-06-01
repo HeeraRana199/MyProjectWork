@@ -20,7 +20,7 @@ public class CandidateRowMapper {
 
     public CandidateDto convertToCandidateDto(Candidate candidate){
         CandidateDto candidateDto = new CandidateDto();
-        candidateDto.setCognizantCandidateId(candidate.getCognizantCandidateId());
+        // candidateDto.setCognizantCandidateId(candidate.getCognizantCandidateId()); // commented out per project decision
         candidateDto.setAssociateId(candidate.getAssociateId());
         candidateDto.setCandidateName(candidate.getCandidateName());
         candidateDto.setCognizantEmailID(candidate.getCognizantEmailID());
@@ -91,7 +91,7 @@ public class CandidateRowMapper {
             candidateScoreDto.setLanguageScore(candidate.getCandidateScore().getLanguageScore());
             candidateScoreDto.setInterimScore(candidate.getCandidateScore().getInterimScore());
             candidateScoreDto.setFinalScore(candidate.getCandidateScore().getFinalScore());
-            candidateScoreDto.setInterimEvaluationFeedback(candidate.getCandidateScore().getInterimEvaluationFeedback());
+            // candidateScoreDto.setInterimEvaluationFeedback(candidate.getCandidateScore().getInterimEvaluationFeedback()); // commented out per project decision
             candidateScoreDto.setFinalEvaluationFeedback(candidate.getCandidateScore().getFinalEvaluationFeedback());
             candidateScoreDto.setReadiness(candidate.getCandidateScore().getReadiness());
 

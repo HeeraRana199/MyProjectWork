@@ -157,8 +157,8 @@ class LeaderControllerTest {
 
         String body = mvcResult.getResponse().getContentAsString();
         // Header row
-        assert body.contains("Candidate ID");
         assert body.contains("Associate ID");
+        assert body.contains("Name");
         // Skill columns from the helper
         assert body.contains("Java");
         // Joined certs in "Name (Provider)" form
@@ -178,6 +178,6 @@ class LeaderControllerTest {
                 .andReturn();
 
         String body = mvcResult.getResponse().getContentAsString();
-        assert body.contains("Candidate ID"); // header row still written
+        assert body.contains("Associate ID"); // header row still written
     }
 }

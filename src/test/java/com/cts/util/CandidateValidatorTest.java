@@ -20,7 +20,7 @@ class CandidateValidatorTest {
     private Candidate validCandidate() {
         Candidate c = new Candidate();
         c.setAssociateId(2308322);
-        c.setCognizantCandidateId(100023);
+        // c.setCognizantCandidateId(100023); // commented out per project decision
         c.setCandidateName("John Doe");
         c.setCognizantEmailID("john.doe@cognizant.com");
         c.setGender("Male");
@@ -113,21 +113,22 @@ class CandidateValidatorTest {
             assertThat(columns(CandidateValidator.validate(c))).contains("Associate Id");
         }
 
-        @Test
-        @DisplayName("✗ cognizantCandidateId null → error")
-        void null_cognizant_id() {
-            Candidate c = validCandidate();
-            c.setCognizantCandidateId(null);
-            assertThat(columns(CandidateValidator.validate(c))).contains("Cognizant Candidate ID");
-        }
-
-        @Test
-        @DisplayName("✗ cognizantCandidateId non-positive → error")
-        void non_positive_cognizant_id() {
-            Candidate c = validCandidate();
-            c.setCognizantCandidateId(-1);
-            assertThat(columns(CandidateValidator.validate(c))).contains("Cognizant Candidate ID");
-        }
+        // Cognizant Candidate ID tests commented out per project decision
+        // @Test
+        // @DisplayName("✗ cognizantCandidateId null → error")
+        // void null_cognizant_id() {
+        //     Candidate c = validCandidate();
+        //     c.setCognizantCandidateId(null);
+        //     assertThat(columns(CandidateValidator.validate(c))).contains("Cognizant Candidate ID");
+        // }
+        //
+        // @Test
+        // @DisplayName("✗ cognizantCandidateId non-positive → error")
+        // void non_positive_cognizant_id() {
+        //     Candidate c = validCandidate();
+        //     c.setCognizantCandidateId(-1);
+        //     assertThat(columns(CandidateValidator.validate(c))).contains("Cognizant Candidate ID");
+        // }
     }
 
     @Nested

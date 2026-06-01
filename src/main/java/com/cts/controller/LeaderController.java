@@ -123,7 +123,7 @@ public class LeaderController {
             writer.write('﻿');
 
             writer.println(String.join(",",
-                    "Candidate ID", "Associate ID", "Name", "Email", "Gender",
+                    "Associate ID", "Name", "Email", "Gender",
                     "Track", "Cohort Code", "SL", "Deployment Location", "Date of Joining",
                     "Programming Skills", "Tool Skills", "Framework Skills",
                     "Attendance Score", "Language Score",
@@ -136,7 +136,6 @@ public class LeaderController {
                 CandidateScoreDto sc = c.getCandidateScore();
 
                 writer.println(String.join(",",
-                        csv(c.getCognizantCandidateId()),
                         csv(c.getAssociateId()),
                         csv(c.getCandidateName()),
                         csv(c.getCognizantEmailID()),

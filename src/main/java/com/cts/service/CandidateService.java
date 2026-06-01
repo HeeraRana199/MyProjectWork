@@ -218,10 +218,10 @@ public class CandidateService {
             //  - Pre-existing rows in the DB are merged in their own sub-txn.
 
             // Track IDs already accepted within THIS upload so a second row
-            // with the same Associate Id / Cognizant Candidate ID / Email is
-            // rejected up-front rather than tripping a SQL unique constraint.
+            // with the same Associate Id / Email is rejected up-front rather
+            // than tripping a SQL unique constraint.
             java.util.Set<Integer> seenAssociateIds = new java.util.HashSet<>();
-            java.util.Set<Integer> seenCognizantIds = new java.util.HashSet<>();
+            // java.util.Set<Integer> seenCognizantIds = new java.util.HashSet<>(); // Cognizant Candidate ID dedup commented out
             java.util.Set<String>  seenEmails       = new java.util.HashSet<>();
 
             for (int i = 0; i < candidates.size(); i++) {
@@ -250,7 +250,7 @@ public class CandidateService {
 
                     // ── 3b. Within-batch duplicate guard ───────────────────
                     Integer assocId = candidate.getAssociateId();
-                    Integer cogId   = candidate.getCognizantCandidateId();
+                    // Integer cogId   = candidate.getCognizantCandidateId(); // Cognizant Candidate ID commented out per project decision
                     String  email   = candidate.getCognizantEmailID() == null
                             ? null : candidate.getCognizantEmailID().trim().toLowerCase();
 
@@ -260,10 +260,10 @@ public class CandidateService {
                         duplicateColumn = "Associate Id";
                         duplicateReason = "Duplicate Associate Id " + assocId
                                 + " — already present earlier in this upload";
-                    } else if (cogId != null && seenCognizantIds.contains(cogId)) {
-                        duplicateColumn = "Cognizant Candidate ID";
-                        duplicateReason = "Duplicate Cognizant Candidate ID " + cogId
-                                + " — already present earlier in this upload";
+                    // } else if (cogId != null && seenCognizantIds.contains(cogId)) {
+                    //     duplicateColumn = "Cognizant Candidate ID";
+                    //     duplicateReason = "Duplicate Cognizant Candidate ID " + cogId
+                    //             + " — already present earlier in this upload";
                     } else if (email != null && !email.isEmpty() && seenEmails.contains(email)) {
                         duplicateColumn = "Cognizant Email ID";
                         duplicateReason = "Duplicate Cognizant Email ID " + candidate.getCognizantEmailID()
@@ -296,7 +296,7 @@ public class CandidateService {
                             result.setRejectedRecords(result.getRejectedRecords() + 1);
                             // Still mark as "seen" so subsequent in-file dupes catch it too
                             if (assocId != null) seenAssociateIds.add(assocId);
-                            if (cogId != null) seenCognizantIds.add(cogId);
+                            // if (cogId != null) seenCognizantIds.add(cogId); // Cognizant Candidate ID commented out
                             if (email != null && !email.isEmpty()) seenEmails.add(email);
                             continue;
                         }
@@ -344,7 +344,7 @@ public class CandidateService {
                     // legitimate) row from re-trying.
                     if (accepted) {
                         if (assocId != null) seenAssociateIds.add(assocId);
-                        if (cogId != null) seenCognizantIds.add(cogId);
+                        // if (cogId != null) seenCognizantIds.add(cogId); // Cognizant Candidate ID commented out
                         if (email != null && !email.isEmpty()) seenEmails.add(email);
                     }
                 } catch (Exception rowEx) {

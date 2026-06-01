@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CandidateDto {
 
-    private Integer cognizantCandidateId; // ✅ Excel value
+    // private Integer cognizantCandidateId; // unused — commented out per project decision
 
     private Integer associateId;
     private String candidateName;

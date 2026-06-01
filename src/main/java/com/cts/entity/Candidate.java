@@ -16,9 +16,9 @@ import java.util.List;
 @NoArgsConstructor
 public class Candidate {
 
-    @NotNull(message = "Cognizant Candidate ID should not be empty")
-    @Column(name = "cognizant_candidate_id", unique = true)
-    private Integer cognizantCandidateId; // ✅ Excel value
+    // @NotNull(message = "Cognizant Candidate ID should not be empty")
+    // @Column(name = "cognizant_candidate_id", unique = true)
+    // private Integer cognizantCandidateId; // unused — commented out per project decision
 
     @Id
     @NotNull(message = "Cognizant Associate ID should not be empty")
