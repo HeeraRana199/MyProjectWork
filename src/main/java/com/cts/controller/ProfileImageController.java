@@ -13,7 +13,10 @@ import java.nio.file.*;
 
 @RestController
 @RequestMapping("/api/profile-image")
-@CrossOrigin(origins = "http://localhost:5173") // Vite frontend
+// CORS is handled globally by SecurityConfig#corsConfigurationSource using
+// `app.cors.allowed-origins` from application.properties (env-driven).
+// No per-controller @CrossOrigin needed — the hardcoded one was removed
+// so localhost URLs don't leak into production builds.
 public class ProfileImageController {
 
     @Value("${file.upload-dir}")
