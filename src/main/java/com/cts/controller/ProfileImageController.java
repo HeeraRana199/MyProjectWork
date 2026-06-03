@@ -1,5 +1,7 @@
 package com.cts.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -13,6 +15,7 @@ import java.nio.file.*;
 
 @RestController
 @RequestMapping("/api/profile-image")
+@Tag(name = "Profile Image (legacy)", description = "Legacy profile-photo endpoints kept for compatibility. Prefer /trainee/profile-photo or /admin/profile-photo for new clients.")
 // CORS is handled globally by SecurityConfig#corsConfigurationSource using
 // `app.cors.allowed-origins` from application.properties (env-driven).
 // No per-controller @CrossOrigin needed — the hardcoded one was removed
@@ -24,6 +27,8 @@ public class ProfileImageController {
 
     // ✅ Upload / overwrite image
     @PostMapping("/{candidateId}")
+    @Operation(summary = "Upload / overwrite profile photo (legacy)",
+            description = "Same behaviour as /trainee/profile-photo/{associateId}. Kept for backwards compatibility.")
     public ResponseEntity<String> uploadProfileImage(
             @PathVariable Long candidateId,
             @RequestParam("file") MultipartFile file
@@ -49,6 +54,8 @@ public class ProfileImageController {
 
     // ✅ Fetch image by candidateId
     @GetMapping("/{candidateId}")
+    @Operation(summary = "Fetch a profile photo (legacy)",
+            description = "Returns 404 if no photo exists for the given id. Unlike the trainee/admin endpoints there is no default-image fallback.")
     public ResponseEntity<Resource> getProfileImage(
             @PathVariable Long candidateId
     ) throws MalformedURLException {

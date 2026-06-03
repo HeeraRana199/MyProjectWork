@@ -118,6 +118,17 @@ public class SecurityConfig {
                     // (set by AuthTokenFilter), so it can return a proper JSON 401 instead of
                     // Spring Security's default empty-body 403.
                     .requestMatchers("/auth/**").permitAll()
+
+                    // Public Swagger / OpenAPI documentation endpoints.
+                    // /v3/api-docs returns the raw OpenAPI JSON; /swagger-ui/** serves the UI.
+                    .requestMatchers(
+                            "/swagger-ui.html",
+                            "/swagger-ui/**",
+                            "/v3/api-docs",
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/webjars/**"
+                    ).permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/leader/**").hasAnyAuthority("ROLE_LEADER", "ROLE_ADMIN")
                 .requestMatchers("/trainee/**").hasAuthority("ROLE_TRAINEE")

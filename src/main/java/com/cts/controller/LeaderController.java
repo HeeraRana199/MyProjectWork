@@ -9,6 +9,8 @@ import com.cts.dto.ProjectDto;
 import com.cts.dto.SkillsDto;
 import com.cts.service.CandidateService;
 import com.cts.service.LeaderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -30,12 +32,15 @@ import java.util.Objects;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/leader")
+@Tag(name = "Leader", description = "Read-only candidate search + CSV export for talent pipeline reviewers. Requires ROLE_LEADER (or ROLE_ADMIN).")
 public class LeaderController {
     private static final Logger logger = LoggerFactory.getLogger(LeaderController.class);
     private final LeaderService leaderService;
     private final CandidateService candidateService;
 
     @GetMapping("/candidate")
+    @Operation(summary = "Get a candidate by Associate Id (leader view)",
+            description = "Returns the full CandidateDto. Same payload as the admin endpoint but accessible to leaders.")
     public ResponseEntity<?> getAssociateById(@RequestParam int id) {
         logger.info("Leader request to fetch candidate with ID: {}", id);
         try {
@@ -54,6 +59,8 @@ public class LeaderController {
      * Pass repeated query params for list values, e.g. ?programmingSkills=Java&programmingSkills=Python
      */
     @GetMapping("/candidates/filter")
+    @Operation(summary = "Multi-criteria candidate search",
+            description = "All non-empty filters are ANDed. Skill lists (programmingSkills, toolSkills, frameworkSkills) require EVERY chip to match. associateId / sls accept repeated query params, e.g. ?associateId=1&associateId=2. Returns a paginated CandidateDto page.")
     public ResponseEntity<?> filterCandidates(
             @RequestParam(required = false) List<String> programmingSkills,
             @RequestParam(required = false) List<String> toolSkills,
@@ -93,6 +100,8 @@ public class LeaderController {
      * Accepts the same filter params as /candidates/filter.
      */
     @GetMapping("/candidates/export")
+    @Operation(summary = "Export matching candidates as CSV",
+            description = "Accepts the same filter params as /candidates/filter. Streams a UTF-8 CSV (with BOM for Excel) with all matching rows — no pagination. Filename: candidates-{timestamp}.csv.")
     public void exportCandidates(
             @RequestParam(required = false) List<String> programmingSkills,
             @RequestParam(required = false) List<String> toolSkills,

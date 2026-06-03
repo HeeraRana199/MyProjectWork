@@ -9,6 +9,9 @@ import com.cts.repository.CandidateRepository;
 import com.cts.repository.UserRepository;
 import com.cts.security.JwtUtils;
 import com.cts.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,7 @@ import org.slf4j.LoggerFactory;
 @RestController
 @RequestMapping("/auth")
 @AllArgsConstructor
+@Tag(name = "Authentication", description = "Login, registration, change-password — no JWT required (except change-password, which reads the SecurityContext set by AuthTokenFilter).")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -47,6 +51,9 @@ public class AuthController {
     private CandidateRepository candidateRepository;
 
     @PostMapping("/registration")
+    @SecurityRequirements({}) // public — no JWT required
+    @Operation(summary = "Register a new Admin account",
+            description = "Creates a new ROLE_ADMIN user with a BCrypt-hashed password.")
     public ResponseEntity<User> register(@RequestBody @Valid User user) {
         // Authenticate using Spring Security (validates username + password via BCrypt)
         User savedUser = authService.registration(user);
@@ -60,6 +67,8 @@ public class AuthController {
      * so the response is always a structured JSON body (Spring Security's default 403 is empty).
      */
     @PostMapping("/change-password")
+    @Operation(summary = "Change current user's password",
+            description = "Requires a valid JWT (extracted from the SecurityContext). Validates the old password, then updates to the new one if it differs and meets length requirements.")
     public ResponseEntity<?> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -100,6 +109,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @SecurityRequirements({}) // public — no JWT required
+    @Operation(summary = "Authenticate and obtain a JWT",
+            description = "Validates email + password against Spring Security. On success returns `{ token, email, role, associateId }`. The `token` is a JWT to be sent as `Authorization: Bearer <token>` on subsequent requests.")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         // Authenticate using Spring Security (validates username + password via BCrypt)
         Authentication authentication = authenticationManager.authenticate(

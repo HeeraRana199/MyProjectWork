@@ -7,6 +7,8 @@ import com.cts.entity.User;
 import com.cts.service.AuthService;
 import com.cts.service.CandidateService;
 import com.cts.service.IngestionLogService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -32,6 +34,7 @@ import java.util.List;
 //@AllArgsConstructor
 @RequiredArgsConstructor
 @RequestMapping("/admin")
+@Tag(name = "Admin", description = "Admin-only operations: Excel upload, candidate management, leader registration, ingestion audit logs. Requires a JWT with ROLE_ADMIN.")
 //@CrossOrigin(origins = "http://localhost:5173") // Vite frontend
 public class AdminController {
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
@@ -44,6 +47,8 @@ public class AdminController {
 
 
     @PostMapping("/leaderRegister")
+    @Operation(summary = "Register a new Leader account",
+            description = "Forces ROLE_LEADER regardless of the role field on the request body. Returns 409 if the email is already taken.")
     public ResponseEntity<?> leaderRegister(@RequestBody User user) {
         try {
             User savedUser = authService.leaderRegister(user);
@@ -61,6 +66,7 @@ public class AdminController {
 
     /** List every leader account (most recent first). */
     @GetMapping("/leaders")
+    @Operation(summary = "List all leaders", description = "Returns all ROLE_LEADER accounts ordered by most-recent first.")
     public ResponseEntity<?> listLeaders() {
         try {
             return ResponseEntity.ok(authService.listLeaders());
@@ -73,6 +79,8 @@ public class AdminController {
 
     /** Delete a leader account by its user id. Rejects if the account isn't a leader. */
     @DeleteMapping("/leader/{userId}")
+    @Operation(summary = "Delete a leader account",
+            description = "Removes the leader by user id. Returns 400 if the account isn't a leader (won't delete Admins).")
     public ResponseEntity<?> deleteLeader(@PathVariable Long userId) {
         try {
             authService.deleteLeader(userId);
@@ -90,6 +98,8 @@ public class AdminController {
 
     // ✅ Excel Upload API with comprehensive validation and processing
     @PostMapping(value = "/candidate/upload",consumes = "multipart/form-data")
+    @Operation(summary = "Upload candidate roster Excel",
+            description = "Streams an .xlsx through schema validation, per-row data validation, and a save/merge pipeline. Returns counts (total/saved/merged/rejected) plus per-row errors. New candidates are inserted; existing ones (by Associate Id) are merged. 400 only when zero rows were parseable.")
     public ResponseEntity<?> uploadExcel(@RequestPart MultipartFile file) {
         logger.info("Received Excel upload request with file: {}, size: {} bytes", file.getOriginalFilename(), file.getSize());
         try {
@@ -129,6 +139,8 @@ public class AdminController {
     }
 
     @GetMapping("/candidate")
+    @Operation(summary = "Get a single candidate by Associate Id",
+            description = "Returns the full CandidateDto (profile + skills + certifications + projects + scores).")
     public ResponseEntity<?> getAssociateById(@RequestParam int id) {
         logger.info("Received request to fetch candidate with ID: {}", id);
         try {
@@ -143,6 +155,8 @@ public class AdminController {
 
 
     @GetMapping("/allcandidates")
+    @Operation(summary = "List all candidates, paginated",
+            description = "Zero-indexed page, optional pageSize (defaults to app.pagination.page-size). Returns content + currentPage / pageSize / totalElements / totalPages / isLast.")
     public ResponseEntity<?> getAllCandidates(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer pageSize) {
@@ -159,6 +173,8 @@ public class AdminController {
 
     // ✅ Fetch image by Associate
     @GetMapping("/profile-photo/{associateId}")
+    @Operation(summary = "Fetch a candidate profile photo",
+            description = "Returns the JPG stored under `${associateId}.jpg`. Falls back to `000000.jpg` if no specific photo exists.")
     public ResponseEntity<Resource> getProfileImage(
             @PathVariable Long associateId
     ) throws MalformedURLException {
@@ -187,6 +203,8 @@ public class AdminController {
 
     /** List every upload attempt — most recent first. */
     @GetMapping("/ingestion-logs")
+    @Operation(summary = "List all Excel upload attempts",
+            description = "Returns IngestionLog rows ordered most-recent first. Each entry has status (SUCCESS / PARTIAL / FAILED), file name, totals, and uploadedBy.")
     public ResponseEntity<?> listIngestionLogs() {
         try {
             List<IngestionLog> logs = ingestionLogService.getAllLogs();
@@ -199,6 +217,8 @@ public class AdminController {
 
     /** Drill-down for one upload: returns the log summary + its full error list. */
     @GetMapping("/ingestion-logs/{id}")
+    @Operation(summary = "Get one ingestion log's details",
+            description = "Returns `{ log, errors }` where errors is the full per-row failure list (schema + data + processing).")
     public ResponseEntity<?> getIngestionLogDetails(@PathVariable Long id) {
         try {
             IngestionLog log = ingestionLogService.getLog(id);
@@ -218,6 +238,8 @@ public class AdminController {
     }
 
     @DeleteMapping("/candidate/{associateId}")
+    @Operation(summary = "Delete a candidate",
+            description = "Cascades through all owned data (skills, certifications, projects, achievements, user account, score, profile photo).")
     public ResponseEntity<?> deleteCandidate(@PathVariable Integer associateId) {
         logger.info("Received request to delete candidate with ID: {}", associateId);
 

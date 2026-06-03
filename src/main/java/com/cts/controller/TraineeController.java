@@ -6,6 +6,8 @@ import com.cts.entity.Project;
 import com.cts.entity.Skills;
 import com.cts.model.ApiResponse;
 import com.cts.service.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import java.nio.file.StandardCopyOption;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/trainee")
+@Tag(name = "Trainee", description = "Trainee self-service: own talent card, certifications, projects, skills, achievements, profile photo. Requires ROLE_TRAINEE.")
 public class TraineeController {
 
     private static final Logger logger =
@@ -49,6 +52,8 @@ public class TraineeController {
 
 
     @GetMapping("/candidate")
+    @Operation(summary = "Get own talent card",
+            description = "Returns the trainee's full profile (skills, projects, certifications, achievements, scores).")
     public ResponseEntity<?> getAssociateById(@RequestParam int id) {
         logger.info("Received request to fetch candidate with ID: {}", id);
         try {
@@ -62,6 +67,8 @@ public class TraineeController {
     }
 
     @PostMapping("/certificate/{associateId}")
+    @Operation(summary = "Register a new certification",
+            description = "Links the certification to the trainee. Status defaults to false (pending verification).")
     public ResponseEntity<?> registerCertification(@RequestBody @Valid Certification certification, @PathVariable Integer associateId){
         logger.info("Received request to register certification for associateId: {}", associateId);
         try {
@@ -77,6 +84,7 @@ public class TraineeController {
         }
     }
     @GetMapping("/certificate/{certificationId}")
+    @Operation(summary = "Get a certification by id")
     public ResponseEntity<?> getCertification(@PathVariable String certificationId){
         logger.info("Received request to fetch certification with ID: {}", certificationId);
         try {
@@ -91,6 +99,8 @@ public class TraineeController {
 
     //Update Certification
     @PatchMapping("/certificate/{certificationId}")
+    @Operation(summary = "Patch a certification (partial update)",
+            description = "Only non-null fields on the request body are applied to the existing entity.")
     public ResponseEntity<?> updateCertification(@RequestBody Certification certification, @PathVariable String certificationId){
         logger.info("Received request to update certification with ID: {}", certificationId);
         try {
@@ -105,6 +115,7 @@ public class TraineeController {
 
     //Delete Certification
     @DeleteMapping("/certificate/{certificationId}")
+    @Operation(summary = "Delete a certification")
     public ResponseEntity<?> deleteCertification(@PathVariable String certificationId){
         logger.info("Received request to delete certification with ID: {}", certificationId);
         try {
@@ -120,6 +131,7 @@ public class TraineeController {
 
 
     @PostMapping("/project/{associateId}")
+    @Operation(summary = "Add a project to a trainee")
     public ResponseEntity<?> addProject(@RequestBody @Valid Project candidateProject, @PathVariable Integer associateId){
         logger.info("Received request to add project for associateId: {}, Project: {}", associateId, candidateProject.getProjectName());
         try {
@@ -136,6 +148,7 @@ public class TraineeController {
     }
 
     @GetMapping("/project/{projectId}")
+    @Operation(summary = "Get a project by id")
     public ResponseEntity<?> getProject(@PathVariable Integer projectId){
         logger.info("Received request to fetch project with ID: {}", projectId);
         try {
@@ -149,6 +162,8 @@ public class TraineeController {
     }
 
     @PutMapping("/project/{projectId}")
+    @Operation(summary = "Update a project (partial)",
+            description = "Only non-null fields on the request body are applied.")
     public ResponseEntity<?> updateProject(@RequestBody Project candidateProject, @PathVariable Integer projectId){
         logger.info("Received request to update project with ID: {}", projectId);
         try {
@@ -165,6 +180,7 @@ public class TraineeController {
     }
 
     @DeleteMapping("/project/{projectId}")
+    @Operation(summary = "Delete a project")
     public ResponseEntity<?> deleteProject(@PathVariable Integer projectId){
         logger.info("Received request to delete project with ID: {}", projectId);
         try {
@@ -181,6 +197,8 @@ public class TraineeController {
 
 
     @PutMapping("/skill/{associateId}")
+    @Operation(summary = "Update trainee skills",
+            description = "Creates a Skills row if the trainee has none, otherwise patches non-null fields onto the existing row.")
     public ResponseEntity<?> updateSkills(@PathVariable Integer associateId, @RequestBody Skills skills){
         logger.info("Received request to update skills for associateId: {}", associateId);
         try {
@@ -200,6 +218,7 @@ public class TraineeController {
 
 
     @PostMapping("/achievement/{associateId}")
+    @Operation(summary = "Add an achievement")
     public ResponseEntity<?> addAchievement(@RequestBody @Valid Achievement candidateAchievement, @PathVariable Integer associateId){
         logger.info("Received request to add achievement for associateId: {}", associateId);
         try {
@@ -216,6 +235,7 @@ public class TraineeController {
     }
 
     @GetMapping("/achievement/{achievementId}")
+    @Operation(summary = "Get an achievement by id")
     public ResponseEntity<?> getAchievement(@PathVariable Integer achievementId){
         logger.info("Received request to fetch achievement with ID: {}", achievementId);
         try {
@@ -229,6 +249,7 @@ public class TraineeController {
     }
 
     @PutMapping("/achievement/{achievementId}")
+    @Operation(summary = "Update an achievement (partial)")
     public ResponseEntity<?> updateAchievement(@RequestBody Achievement candidateAchievement, @PathVariable Integer achievementId){
         logger.info("Received request to update achievement with ID: {}", achievementId);
         try {
@@ -245,6 +266,7 @@ public class TraineeController {
     }
 
     @DeleteMapping("/achievement/{achievementId}")
+    @Operation(summary = "Delete an achievement")
     public ResponseEntity<?> deleteAchievement(@PathVariable Integer achievementId){
         logger.info("Received request to delete achievement with ID: {}", achievementId);
         try {
@@ -260,6 +282,8 @@ public class TraineeController {
     //Upload Trainee Profile Photo
     // ✅ Upload / overwrite image
     @PostMapping("/profile-photo/{associateId}")
+    @Operation(summary = "Upload / overwrite a profile photo",
+            description = "Accepts a multipart file under the form key `file`. Stores it as `{associateId}.jpg` under the configured upload directory.")
     public ResponseEntity<String> uploadProfileImage(
             @PathVariable Long associateId,
             @RequestParam("file") MultipartFile file
@@ -285,6 +309,8 @@ public class TraineeController {
 
     // ✅ Fetch image by associateId
     @GetMapping("/profile-photo/{associateId}")
+    @Operation(summary = "Fetch a profile photo",
+            description = "Returns the JPG stored under `{associateId}.jpg`. Falls back to `000000.jpg` if no specific photo exists.")
     public ResponseEntity<Resource> getProfileImage(
             @PathVariable Long associateId
     ) throws MalformedURLException {
